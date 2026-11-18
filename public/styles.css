@@ -418,3 +418,52 @@ select, input[type=text], input[type=search], input[type=number], input[type=dat
 .calc { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; background: var(--soft); padding: 14px; border-radius: 12px; margin: 14px 0; }
 .calc label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
 .calc-out { grid-column: 1 / -1; font-size: 15px; }
+
+/* ───────── Académie ludique ───────── */
+.seg a { padding: 6px 12px; font-size: 13px; border-radius: 9px; color: var(--muted); text-decoration: none; font-weight: 500; }
+.seg a.on { background: var(--panel); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgb(0 0 0 / .1); }
+.prog { background: linear-gradient(135deg, var(--navy), var(--navy-2)); color: var(--on-navy); border-radius: var(--radius); padding: 16px 18px; display: grid; gap: 10px; }
+.prog-lvl { display: flex; gap: 12px; align-items: center; }
+.prog-lvl small { display: block; color: var(--on-navy-muted); font-size: 12px; }
+.prog-lvl b { font-family: var(--font-display); font-size: 17px; }
+.prog-n { width: 42px; height: 42px; border-radius: 12px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font: 700 18px var(--font-display); }
+.prog-bar { height: 8px; border-radius: 999px; background: rgb(255 255 255 / .12); overflow: hidden; }
+.prog-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #F5D38A); border-radius: 999px; transition: width .6s cubic-bezier(.3, 1.3, .5, 1); }
+.prog-stats { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--on-navy-muted); }
+.badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.badge-item { display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 6px; border-radius: 999px; background: rgb(255 255 255 / .06); opacity: .45; filter: grayscale(1); }
+.badge-item.on { opacity: 1; filter: none; background: rgb(233 185 85 / .18); }
+.badge-item i { font-style: normal; font-size: 16px; }
+.badge-item small { font-size: 12px; }
+.quiz { margin-top: 28px; padding: 18px; border-radius: var(--radius); background: var(--soft); display: grid; gap: 14px; }
+.quiz-head { display: flex; justify-content: space-between; align-items: baseline; }
+.quiz-head h3 { margin: 0; }
+.quiz-q p { margin: 0 0 8px; }
+.quiz-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.quiz-opt { background: var(--panel); text-align: left; }
+.quiz-opt.good { background: var(--up-soft); border-color: var(--up); color: var(--up); font-weight: 600; }
+.quiz-opt.bad { background: var(--down-soft); border-color: var(--down); color: var(--down); text-decoration: line-through; }
+.quiz-fb { margin: 6px 0 0; font-size: 13px; min-height: 18px; }
+.quiz-fb.good { color: var(--up); } .quiz-fb.bad { color: var(--down); }
+.quiz-done { margin: 0; font-weight: 600; color: var(--up); }
+.game { display: grid; gap: 10px; }
+.game-chart { min-height: 240px; border-radius: 12px; overflow: hidden; background: var(--panel); }
+.game-info { margin: 0; min-height: 22px; }
+.game-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.game-btns button { flex: 1 1 160px; padding: 14px; font-size: 16px; font-weight: 700; border-width: 2px; }
+.game-up { color: var(--up); border-color: var(--up); } .game-up:hover { background: var(--up-soft); }
+.game-down { color: var(--down); border-color: var(--down); } .game-down:hover { background: var(--down-soft); }
+.lexique { display: grid; gap: 14px; }
+.lex-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.lex-head input { width: min(360px, 100%); }
+.lex-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr)); gap: 14px; align-items: start; }
+.lex-card { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px; align-items: start; }
+.lex-card small { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+.lex-card h3 { font-size: 17px; margin: 2px 0 6px; }
+.lex-card p { margin: 0; font-size: 14px; }
+.lex-ex { margin-top: 6px !important; color: var(--muted); font-size: 13px !important; }
+.lex-ico { width: 96px; height: 70px; border-radius: 12px; display: grid; place-items: center; }
+.lex-ico svg { width: 34px; height: 34px; }
+.lex-dia { width: 96px; height: 70px; border-radius: 12px; background: var(--soft); padding: 4px; }
+.lex-dia svg { width: 100%; height: 100%; }
+@media (max-width: 420px) { .lex-card { grid-template-columns: 1fr; } }

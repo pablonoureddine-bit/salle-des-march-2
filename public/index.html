@@ -235,7 +235,15 @@
 
   <!-- ───────── ACADÉMIE ───────── -->
   <section class="view" id="view-academie" hidden>
-    <div class="split">
+    <div class="page-head">
+      <div><div class="eyebrow">Apprendre en jouant</div><h1>Académie</h1></div>
+      <div class="seg" id="acad-tabs" role="tablist" aria-label="Académie">
+        <a href="#academie" data-t="cours">Cours et quiz</a><a href="#academie/jeu" data-t="jeu">Devine la suite</a><a href="#academie/lexique" data-t="lexique">Lexique illustré</a>
+      </div>
+    </div>
+    <div id="acad-progress"></div>
+    <div id="acad-alt" hidden></div>
+    <div class="split" id="acad-cours">
       <nav class="panel sidenav lessons" id="lessons" aria-label="Leçons"></nav>
       <article class="panel lesson" id="lesson"></article>
     </div>

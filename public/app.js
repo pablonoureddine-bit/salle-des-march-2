@@ -8,6 +8,8 @@ import * as Journal from "./journal.js";
 import * as Notify from "./notify.js";
 import { burst } from "./fx.js";
 import { assetVisual, topicOf, topicVisual, TOPICS } from "./visuals.js";
+import * as Quiz from "./quiz.js";
+import { lexiqueBlock } from "./lexique.js";
 import * as Predictions from "./predictions.js";
 import * as Entreprise from "./entreprise.js";
 
@@ -204,7 +206,7 @@ function renderQuote(prevPrice) {
 let lastStep = null;
 function celebrate(price, prevPrice, change) {
   if (prevPrice == null) { lastStep = Math.trunc(change * 100); return; }
-  if (price !== prevPrice) burst(price > prevPrice ? "gain" : "loss", { anchor: $("q-px"), text: (price > prevPrice ? "+" : "") + pct(price / prevPrice - 1) });
+  if (price !== prevPrice && !$("view-marches").hidden) burst(price > prevPrice ? "gain" : "loss", { anchor: $("q-px"), text: (price > prevPrice ? "+" : "") + pct(price / prevPrice - 1) });
   const step = Math.trunc(change * 100);
   if (lastStep != null && step !== lastStep && step !== 0) {
     burst(step > lastStep ? "gain" : "loss", { anchor: $("q-px"), size: "big", text: pct(change) });
@@ -421,11 +423,20 @@ function showResult(d) {
 /* ───────── Académie ───────── */
 let currentLesson = null;
 const helpers = () => ({ name: displayName(), fmt, pct, pctAbs, tfLabel: TF_LABEL[state.tf].toLowerCase() });
+let gameEl = null, lexEl = null;
+document.addEventListener("progress", () => { if (!$("view-academie").hidden) $("acad-progress").replaceChildren(Quiz.progressCard(LESSONS)); });
 function renderAcademy(id) {
+  Quiz.touchStreak();
+  const tab = id === "jeu" ? "jeu" : id === "lexique" ? "lexique" : "cours";
+  $("acad-tabs").querySelectorAll("a").forEach((a) => a.classList.toggle("on", a.dataset.t === tab));
+  $("acad-progress").replaceChildren(Quiz.progressCard(LESSONS));
+  $("acad-cours").hidden = tab !== "cours"; $("acad-alt").hidden = tab === "cours";
+  if (tab === "jeu") { gameEl ||= Quiz.gameBlock(LESSONS); $("acad-alt").replaceChildren(gameEl); return; }
+  if (tab === "lexique") { lexEl ||= lexiqueBlock(); $("acad-alt").replaceChildren(lexEl); return; }
   const lesson = LESSONS.find((l) => l.id === id) || currentLesson || LESSONS[0];
   currentLesson = lesson;
   $("lessons").replaceChildren(...MODULES.map((m) => el("div", null, el("h3", null, m.title),
-    LESSONS.filter((l) => l.module === m.id).map((l) => el("a", { href: "#academie/" + l.id, class: l.id === lesson.id ? "on" : "" }, l.title, el("span", null, l.minutes + " min"))))));
+    LESSONS.filter((l) => l.module === m.id).map((l) => el("a", { href: "#academie/" + l.id, class: l.id === lesson.id ? "on" : "" }, (Quiz.isDone(l.id) ? "✓ " : "") + l.title, el("span", null, l.minutes + " min"))))));
   const idx = LESSONS.indexOf(lesson), prev = LESSONS[idx - 1], next = LESSONS[idx + 1];
   const mod = MODULES.find((m) => m.id === lesson.module);
   const body = el("div"); body.innerHTML = lesson.body; // contenu statique écrit dans academy.js
@@ -439,6 +450,7 @@ function renderAcademy(id) {
     body,
     lesson.calculator ? calculator() : null,
     actions.childElementCount ? actions : null,
+    Quiz.quizBlock(lesson, LESSONS),
     el("div", { class: "lesson-nav" },
       prev ? el("a", { href: "#academie/" + prev.id }, "← " + prev.title) : el("span"),
       next ? el("a", { href: "#academie/" + next.id }, next.title + " →") : el("span")));

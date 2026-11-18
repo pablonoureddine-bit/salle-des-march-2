@@ -31,7 +31,11 @@ function render() {
   if (!data) return;
   const evs = data.events.filter((e) => filter === "tout" || (filter === "fort" ? e.impact === "fort" || e.type === "earnings" : filter === "resultats" ? e.type === "earnings" : e.type === "eco"));
   if (!evs.length) {
-    $("cal-list").replaceChildren(el("p", { class: "muted" }, data.error ? "Calendrier indisponible pour le moment : " + data.error : "Aucun événement à afficher avec ce filtre."));
+    const errs = [data.error, ...(data.errors || [])].filter(Boolean);
+    $("cal-list").replaceChildren(el("div", { class: "empty" },
+      el("h2", null, "Aucun événement à afficher"),
+      el("p", null, errs.length ? "Les sources du calendrier ne répondent pas pour le moment. Nouvel essai automatique dans quelques minutes." : "Essaie le filtre « Tout »."),
+      ...errs.map((x) => el("p", { class: "muted small" }, "Détail : " + x))));
     return;
   }
   const days = new Map();

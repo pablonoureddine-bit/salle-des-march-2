@@ -5,7 +5,7 @@ Outil de support pour traders, en français :
 - **Marchés** : graphique en chandeliers mis à jour toutes les 10 secondes, sur l'actif de ton choix (indices, actions, crypto, forex, matières premières), en 15 min, 1 h, 1 jour ou 1 semaine.
 - **Analyse technique** automatique : moyennes mobiles 20/50/200, RSI, MACD, Bollinger, Ichimoku, Fibonacci, stochastique, ATR, supports et résistances, et un score de synthèse de −100 à +100.
 - **Actualités** : titres récents de Boursorama, BFM Business, Bloomberg, Les Échos, Zonebourse, Investing.com, Le Figaro et Reuters, plus les actus propres à l'actif affiché.
-- **Académie** : 23 leçons (bases du trading, indicateurs, grands indices). Chaque leçon affiche ce que l'indicateur dit **en ce moment** sur l'actif suivi.
+- **Académie ludique** : quiz à chaque leçon, points d'expérience, niveaux et badges ; mini-jeu « Devine la suite » sur de vrais graphiques passés ; lexique illustré de plus de 70 notions de finance. 23 leçons (bases du trading, indicateurs, grands indices). Chaque leçon affiche ce que l'indicateur dit **en ce moment** sur l'actif suivi.
 - **Anticipations par Claude** : trois scénarios chiffrés (haussier, central, baissier) à partir des indicateurs et des derniers titres de presse.
 - **Marchés** : onglets par famille de titres (indices du monde entier, actions, crypto, devises, matières premières, taux), cartes avec logo ou drapeau, cours et mini-courbe rafraîchis toutes les 20 secondes.
 - **Calendrier** : annonces économiques de la semaine et de la suivante (inflation, emploi, banques centrales…) et publications de résultats, avec rappel 15 minutes avant les annonces à fort impact.
