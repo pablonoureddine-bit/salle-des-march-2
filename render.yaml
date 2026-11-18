@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: salle-des-marches
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: AI_LIMIT_PER_HOUR
+        value: "10"
