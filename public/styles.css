@@ -669,3 +669,27 @@ body.fcv-open { overflow: hidden; }
   .cards .empty { box-shadow: none; }
   #quote-box { scroll-margin-top: 140px; }
 }
+
+/* ───────── Annuaire ───────── */
+#annu-search { width: min(380px, 100%); }
+.annu-countries button { display: inline-flex; align-items: center; gap: 7px; }
+.annu-countries button img { border-radius: 2px; }
+.annu-countries button small { font-size: 11px; opacity: .65; }
+#annu-sectors button { border-radius: 999px; padding: 4px 12px; font-size: 12px; }
+#annu-sectors button.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+#annu-title { font-size: 17px; }
+.annu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 14px; align-items: start; }
+.annu-card { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; display: grid; gap: 8px; cursor: pointer; border: 2px solid transparent; transition: border-color .15s, transform .15s; }
+.annu-card:hover, .annu-card:focus-visible { border-color: var(--accent); transform: translateY(-2px); }
+.annu-top { display: flex; gap: 12px; align-items: center; }
+.annu-id { display: grid; min-width: 0; }
+.annu-id b { font-family: var(--font-display); font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.annu-id small { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-family: var(--font-mono); font-size: 11px; }
+.annu-id small img { border-radius: 2px; }
+.annu-px { margin-left: auto; display: grid; justify-items: end; gap: 3px; }
+.annu-px .mono { font-size: 14px; }
+.annu-sector { justify-self: start; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--link); background: var(--warn-soft); padding: 2px 9px; border-radius: 999px; }
+.annu-card p { margin: 0; font-size: 14px; line-height: 1.55; }
+.annu-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.annu-actions .linkbtn { margin-right: auto; padding-left: 0; }
+.annu-actions .btn-soft { font-size: 12px; padding: 4px 10px; }

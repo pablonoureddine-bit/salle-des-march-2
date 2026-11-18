@@ -14,6 +14,7 @@ import * as Demo from "./demo.js";
 import * as Trader from "./trader.js";
 import * as Sessions from "./sessions.js";
 import * as FullChart from "./fullchart.js";
+import * as Annuaire from "./annuaire.js";
 import { relatedAssets } from "./related.js";
 import { lexiqueBlock } from "./lexique.js";
 import * as Predictions from "./predictions.js";
@@ -36,7 +37,7 @@ const displayName = () => KNOWN.get(state.symbol) || state.name || state.symbol;
 
 /* ───────── Navigation ───────── */
 // Rubriques principales ; "infos" regroupe actualités, calendrier et prédictions.
-const SECTIONS = ["marches", "trader", "actus", "calendrier", "predictions", "entreprise", "compte", "journal", "academie"];
+const SECTIONS = ["marches", "trader", "annuaire", "actus", "calendrier", "predictions", "entreprise", "compte", "journal", "academie"];
 const INFOS = ["actus", "calendrier", "predictions"];
 const COMPTE = { demo: "compte", journal: "journal" };
 const scrollMemo = {};
@@ -47,17 +48,23 @@ function resolve() {
   if (view === "infos") { if (!INFOS.includes(sub)) sub = store.get("sdm.infos", "actus"); store.set("sdm.infos", sub); return { nav: "infos", section: sub, sub }; }
   if (view === "journal") { view = "compte"; sub = "journal"; }
   if (view === "compte") { if (!COMPTE[sub]) sub = store.get("sdm.compte", "demo"); store.set("sdm.compte", sub); return { nav: "compte", section: COMPTE[sub], sub }; }
+  if (view === "annuaire") return { nav: "entreprise", section: "annuaire" };
+  if (view === "entreprise" && !sub && !store.get("sdm.ent.seen", false)) return { nav: "entreprise", section: "annuaire" };
   if (!["marches", "trader", "entreprise", "academie"].includes(view)) view = "marches";
   return { nav: view, section: view, sub };
 }
 function route() {
   const { nav, section, sub } = resolve();
-  const key = nav === "infos" || nav === "compte" ? nav + "/" + section : nav;
+  const key = nav === "infos" || nav === "compte" || nav === "entreprise" ? nav + "/" + section : nav;
   if (currentKey) scrollMemo[currentKey] = scrollY;
   const apply = () => {
     for (const id of SECTIONS) $("view-" + id).hidden = id !== section;
     $("infos-tabs").hidden = nav !== "infos";
     $("compte-tabs").hidden = nav !== "compte";
+    $("entreprise-tabs").hidden = nav !== "entreprise";
+    document.querySelectorAll("#entreprise-tabs a").forEach((a) => a.classList.toggle("on", a.dataset.sub === section));
+    if (section === "annuaire") Annuaire.show();
+    if (section === "entreprise") store.set("sdm.ent.seen", true);
     document.querySelectorAll("#compte-tabs a").forEach((a) => a.classList.toggle("on", COMPTE[a.dataset.sub] === section));
     document.querySelectorAll(".tabs a").forEach((a) => { const on = a.dataset.view === nav; a.classList.toggle("on", on); on ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"); });
     document.querySelectorAll("#infos-tabs a").forEach((a) => a.classList.toggle("on", a.dataset.sub === section));
@@ -603,7 +610,7 @@ $("overlays").querySelectorAll("button").forEach((b) => b.classList.toggle("on",
   renderTicker();
   Notify.init({ open: (s) => ctx.open(s) });
   Browser.init(ctx); browserReady = true;
-  Predictions.init(ctx); Entreprise.init(ctx); Calendar.init(ctx); Journal.init(ctx); Demo.init(ctx); Trader.init(ctx); Sessions.init(ctx); FullChart.init(ctx);
+  Predictions.init(ctx); Entreprise.init(ctx); Calendar.init(ctx); Journal.init(ctx); Demo.init(ctx); Trader.init(ctx); Sessions.init(ctx); FullChart.init(ctx); Annuaire.init(ctx);
   $("chart-full").addEventListener("click", () => FullChart.open(state.symbol, displayName()));
   $("tr-full").addEventListener("click", () => FullChart.open(store.get("sdm.trade.symbol", state.symbol)));
   connectLive();

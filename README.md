@@ -19,6 +19,7 @@ Outil de support pour traders, en français :
 - **Journal de trading** : saisie des trades, résultat, gain en R, taux de réussite et courbe des résultats (enregistré dans le navigateur).
 - **Notifications** : centre de notifications, pop-ups, alertes de prix et notifications du navigateur ; animations de gain et de perte (désactivables).
 - **Prédictions en continu** : sans clé payante, un modèle automatique gratuit (70 % indicateurs techniques, 30 % ton des actus) les recalcule toutes les 15 minutes. Avec une clé Anthropic, toutes les heures, Claude relit les actus et les indicateurs de 15 actifs et met à jour sa prédiction à 1–5 séances. Les navigateurs ouverts la reçoivent en direct. Chaque prédiction est jugée après 7 jours pour afficher un taux de réussite réel.
+- **Annuaire des entreprises** : environ 110 grandes sociétés cotées dans 17 pays (Europe, Amériques, Asie, Océanie), avec secteur, courte présentation, cours et variation ; recherche et filtre par secteur.
 - **Entreprises** : profil, comptes annuels (compte de résultat, bilan, flux de trésorerie), ratios, publications de résultats et **prévisionnel** (consensus des analystes : chiffre d'affaires et bénéfice attendus, objectif de cours, recommandations). Gratuit via Yahoo Finance, ou Financial Modeling Prep avec une clé.
 
 ## Lancer en local

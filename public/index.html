@@ -232,6 +232,24 @@
     <p class="disclaimer">Prédictions générées automatiquement. Elles peuvent être fausses et ne constituent pas un conseil en investissement ni une recommandation d'achat ou de vente.</p>
   </section>
 
+  <nav class="subnav" id="entreprise-tabs" aria-label="Entreprises" hidden>
+    <a href="#annuaire" data-sub="annuaire"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18" fill="none" stroke="currentColor" stroke-width="1.6"/></svg><span>Annuaire par pays</span></a>
+    <a href="#entreprise" data-sub="entreprise"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 20V8l6-4v16M10 20V10h10v10M3 20h18M13 13h4M13 16h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg><span>Fiche société</span></a>
+  </nav>
+
+  <!-- ───────── ANNUAIRE ───────── -->
+  <section class="view" id="view-annuaire" hidden>
+    <div class="page-head">
+      <div><div class="eyebrow">Les grandes sociétés cotées du monde</div><h1>Annuaire des entreprises</h1></div>
+      <input id="annu-search" type="search" placeholder="Chercher une société, un secteur, un pays…" aria-label="Chercher dans l'annuaire">
+    </div>
+    <div class="families annu-countries" id="annu-countries" role="tablist" aria-label="Pays"></div>
+    <div class="chips" id="annu-sectors"></div>
+    <h2 id="annu-title"></h2>
+    <div class="annu-grid" id="annu-grid"></div>
+    <p class="muted small">Présentations rédigées par Invest Zoo à titre informatif. Cours actualisés toutes les 15 secondes (avec jusqu'à 15 minutes de retard selon la bourse).</p>
+  </section>
+
   <!-- ───────── ENTREPRISES ───────── -->
   <section class="view" id="view-entreprise" hidden>
     <div class="split">
