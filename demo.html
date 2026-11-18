@@ -1,0 +1,1503 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>Salle des marchés</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Terminal de marché : en-tête fixe avec bandeau de cours, puis vues Marchés / Actualités / Académie. */
+:root {
+  --bg: #f3f4f6; --panel: #ffffff; --ink: #141a26; --muted: #5d6676; --line: #dde1e8; --soft: #eceff4;
+  --accent: #2b55c9; --accent-ink: #ffffff;
+  --up: #12855a; --down: #c8343f; --warn: #b26a00;
+  --up-soft: #e3f3ec; --down-soft: #fae6e8; --warn-soft: #fbf0dd;
+  --ma20: #b26a00; --ma50: #2b55c9; --ma200: #8a3fb8; --fib: #a1612a; --tenkan: #1f8fb3; --kijun: #9a2f4f;
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e131c; --panel: #151c28; --ink: #e6e9ef; --muted: #8b94a5; --line: #263042; --soft: #1c2433;
+  --accent: #7a9bff; --accent-ink: #0e131c; --up: #3ccf8e; --down: #ff6b75; --warn: #f0a83a;
+  --up-soft: #12302a; --down-soft: #3a1c22; --warn-soft: #3a2a12;
+  --ma20: #f0a83a; --ma50: #7a9bff; --ma200: #c88cf0; --fib: #e0a46c; --tenkan: #5cc8ea; --kijun: #ff8fb0;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0e131c; --panel: #151c28; --ink: #e6e9ef; --muted: #8b94a5; --line: #263042; --soft: #1c2433;
+  --accent: #7a9bff; --accent-ink: #0e131c; --up: #3ccf8e; --down: #ff6b75; --warn: #f0a83a;
+  --up-soft: #12302a; --down-soft: #3a1c22; --warn-soft: #3a2a12;
+  --ma20: #f0a83a; --ma50: #7a9bff; --ma200: #c88cf0; --fib: #e0a46c; --tenkan: #5cc8ea; --kijun: #ff8fb0;
+  color-scheme: dark; }
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.5 var(--font-body); }
+a { color: var(--accent); }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+h2 { font-size: 15px; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+button, select, input { font: inherit; color: inherit; }
+button { cursor: pointer; border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 6px 11px; font-weight: 500; }
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+button:disabled { opacity: .55; cursor: default; }
+select, input[type=text], input[type=search], input[type=number] { border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 7px 10px; max-width: 100%; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* En-tête */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--panel); border-bottom: 1px solid var(--line); }
+.bar-in { max-width: 1360px; margin: 0 auto; padding: 10px max(16px, env(safe-area-inset-left)); display: flex; align-items: center; gap: 12px 24px; flex-wrap: wrap; }
+.logo { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 800; font-size: 17px; color: var(--ink); text-decoration: none; }
+.logo-mark { width: 18px; height: 18px; border-radius: 4px; background: linear-gradient(135deg, var(--up) 0 50%, var(--accent) 50% 100%); }
+.tabs { display: flex; gap: 4px; }
+.tabs a { padding: 6px 12px; border-radius: 6px; color: var(--muted); text-decoration: none; font-weight: 600; }
+.tabs a.on { background: var(--soft); color: var(--ink); }
+.search { position: relative; margin-left: auto; flex: 1 1 260px; max-width: 380px; }
+.search input { width: 100%; }
+.search-res { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 24px rgb(0 0 0 / .12); max-height: 360px; overflow: auto; z-index: 30; }
+.search-res button { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 8px 12px; background: none; }
+.search-res button:hover, .search-res button:focus-visible { background: var(--soft); }
+.search-res small { color: var(--muted); grid-column: 1 / -1; }
+
+.ticker { display: flex; gap: 22px; overflow-x: auto; padding: 6px max(16px, env(safe-area-inset-left)); border-top: 1px solid var(--line); font-size: 12px; scrollbar-width: none; white-space: nowrap; }
+.ticker::-webkit-scrollbar { display: none; }
+.tk { display: inline-flex; gap: 8px; align-items: baseline; cursor: pointer; border: 0; background: none; padding: 0; }
+.tk b { font-weight: 600; }
+.up { color: var(--up); } .down { color: var(--down); } .flat { color: var(--warn); }
+.banner { background: var(--warn-soft); color: var(--warn); text-align: center; padding: 6px 16px; font-weight: 600; font-size: 13px; }
+
+.wrap { max-width: 1360px; margin: 0 auto; padding: 18px max(16px, env(safe-area-inset-right)) 48px max(16px, env(safe-area-inset-left)); }
+.view { display: grid; gap: 16px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; min-width: 0; }
+.panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.panel-head.big { align-items: flex-end; }
+.panel-head.big h1 { font-size: 24px; }
+
+/* Cotation */
+.quote { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 24px; }
+.q-id { display: flex; align-items: center; gap: 10px; }
+.q-id h1 { font-size: 22px; }
+.q-sym { color: var(--muted); }
+.q-px { display: flex; align-items: baseline; gap: 12px; }
+.px { font-size: 28px; font-weight: 500; border-radius: 4px; padding: 0 4px; transition: background .6s; }
+.px.flash-up { background: var(--up-soft); transition: none; } .px.flash-down { background: var(--down-soft); transition: none; }
+.live-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+.live-dot.on { background: var(--up); box-shadow: 0 0 0 0 var(--up); animation: pulse 2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--up) 60%, transparent); } 100% { box-shadow: 0 0 0 8px transparent; } }
+@media (prefers-reduced-motion: reduce) { .live-dot.on { animation: none; } .px { transition: none; } }
+
+.layout { display: grid; grid-template-columns: 210px minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+@media (max-width: 1180px) { .layout { grid-template-columns: minmax(0, 1fr) 320px; } .watch { grid-column: 1 / -1; } }
+@media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+/* Liste des actifs */
+.watch { padding: 8px; max-height: 760px; overflow: auto; }
+@media (max-width: 1180px) { .watch { max-height: none; } #watchlist { display: flex; gap: 6px; overflow-x: auto; } .wl-group { display: contents; } .wl-group h3 { display: none; } .wl-item { width: auto; min-width: 160px; } }
+.wl-group h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding: 10px 8px 4px; font-family: var(--font-body); }
+.wl-item { display: grid; grid-template-columns: 1fr auto; gap: 0 8px; width: 100%; border: 0; background: none; text-align: left; padding: 6px 8px; border-radius: 6px; white-space: nowrap; }
+.wl-item:hover { background: var(--soft); }
+.wl-item.on { background: var(--soft); box-shadow: inset 2px 0 0 var(--accent); }
+.wl-item .nm { overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+.wl-item .v { font-family: var(--font-mono); font-size: 12px; text-align: right; }
+.wl-item .c { font-family: var(--font-mono); font-size: 11px; grid-column: 2; text-align: right; }
+.wl-item .s { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+
+/* Graphique */
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; margin-bottom: 8px; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.seg button { padding: 4px 10px; font-size: 13px; }
+.seg button.on { background: var(--soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); min-height: 18px; margin-bottom: 4px; }
+.legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+.chart { width: 100%; }
+#c-price { height: 420px; }
+#c-rsi, #c-macd { height: 110px; }
+@media (max-width: 600px) { #c-price { height: 300px; } }
+.sub { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); padding: 6px 0 2px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; border-top: 1px solid var(--line); margin-top: 4px; }
+.sub a { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.perf { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.perf div { background: var(--soft); border-radius: 6px; padding: 8px 10px; }
+.perf b { display: block; font-family: var(--font-mono); font-weight: 500; font-size: 15px; }
+.perf span { font-size: 11px; color: var(--muted); }
+@media (max-width: 520px) { .perf { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Synthèse */
+.side { display: grid; gap: 16px; }
+.score-top { display: flex; justify-content: space-between; align-items: baseline; margin: 4px 0 8px; }
+.verdict { font-family: var(--font-display); font-size: 22px; font-weight: 800; }
+.verdict.up { color: var(--up); } .verdict.down { color: var(--down); } .verdict.flat { color: var(--warn); }
+.gauge { position: relative; height: 10px; border-radius: 999px; background: linear-gradient(90deg, var(--down), var(--warn) 50%, var(--up)); }
+.needle { position: absolute; top: -4px; left: 50%; width: 4px; height: 18px; border-radius: 2px; background: var(--ink); transform: translateX(-2px); transition: left .4s; }
+.gauge-scale { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); }
+.row .lbl small { display: block; color: var(--muted); font-size: 12px; }
+.row .lbl a { color: inherit; text-decoration: none; font-weight: 500; }
+.row .lbl a:hover { color: var(--accent); }
+.row .val { font-family: var(--font-mono); font-size: 12px; text-align: right; }
+.pill { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.pill.up { background: var(--up-soft); } .pill.down { background: var(--down-soft); } .pill.flat { background: var(--warn-soft); }
+.levels { display: grid; gap: 4px; font-family: var(--font-mono); font-size: 13px; }
+.lvl { display: flex; justify-content: space-between; gap: 8px; padding: 5px 8px; border-radius: 4px; }
+.lvl.res { background: var(--down-soft); } .lvl.sup { background: var(--up-soft); } .lvl.now { background: var(--soft); font-weight: 600; }
+.lvl small { color: var(--muted); font-family: var(--font-body); }
+
+/* Actus */
+.news { list-style: none; margin: 0; padding: 0; display: grid; }
+.news li { padding: 10px 0; border-top: 1px solid var(--line); display: grid; gap: 2px; }
+.news li:first-child { border-top: 0; }
+.news a { color: var(--ink); text-decoration: none; font-weight: 500; }
+.news a:hover { color: var(--accent); text-decoration: underline; }
+.news .meta { font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+.news .src { font-weight: 600; color: var(--accent); }
+.news.compact li { padding: 7px 0; }
+.news.compact a { font-size: 13px; }
+.news-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .news-grid { grid-template-columns: minmax(0, 1fr); } }
+#news-filter { width: min(360px, 100%); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border-radius: 999px; padding: 4px 12px; font-size: 13px; display: inline-flex; gap: 6px; align-items: center; }
+.chip.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--up); }
+.chip .dot.ko { background: var(--down); }
+
+/* IA */
+.ai-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+.ai-form label { display: grid; gap: 3px; font-size: 12px; color: var(--muted); }
+.ai-form label.grow { flex: 1 1 240px; }
+.ai-form label.grow input { width: 100%; }
+.badge { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; background: var(--soft); color: var(--muted); }
+.badge.ok { background: var(--up-soft); color: var(--up); } .badge.ko { background: var(--warn-soft); color: var(--warn); }
+.status { font-size: 13px; color: var(--muted); min-height: 20px; margin: 10px 0 0; }
+.status.err { color: var(--down); }
+.result { display: grid; gap: 14px; margin-top: 8px; }
+.res-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.summary { font-size: 15px; margin: 0; max-width: 80ch; }
+.scen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 760px) { .scen { grid-template-columns: minmax(0, 1fr); } }
+.sc { border: 1px solid var(--line); border-radius: 6px; padding: 12px; display: grid; gap: 6px; align-content: start; }
+.sc-top { display: flex; justify-content: space-between; align-items: baseline; }
+.sc-top span { font-family: var(--font-mono); font-size: 18px; }
+.bar-p { height: 5px; background: var(--soft); border-radius: 999px; overflow: hidden; }
+.bar-p i { display: block; height: 100%; }
+.sc p { margin: 0; font-size: 13px; }
+.cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 760px) { .cols { grid-template-columns: minmax(0, 1fr); } }
+.cols ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; }
+.plan { background: var(--soft); border-radius: 6px; padding: 12px 14px; }
+.plan dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 14px; margin: 6px 0 0; font-size: 13px; }
+.plan dt { color: var(--muted); } .plan dd { margin: 0; }
+.disclaimer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; margin: 14px 0 0; }
+
+/* Académie */
+.academy { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 860px) { .academy { grid-template-columns: minmax(0, 1fr); } }
+.lessons { position: sticky; top: 110px; max-height: calc(100vh - 130px); overflow: auto; padding: 8px; }
+@media (max-width: 860px) { .lessons { position: static; max-height: none; } }
+.lessons h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding: 12px 10px 4px; font-family: var(--font-body); }
+.lessons a { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 6px; color: var(--ink); text-decoration: none; font-size: 13px; }
+.lessons a:hover { background: var(--soft); }
+.lessons a.on { background: var(--soft); box-shadow: inset 2px 0 0 var(--accent); font-weight: 600; }
+.lessons a span { color: var(--muted); font-size: 11px; font-family: var(--font-mono); white-space: nowrap; }
+.lesson { padding: 24px clamp(16px, 4vw, 40px); }
+.lesson > * { max-width: 72ch; }
+.lesson h1 { font-size: 28px; margin-bottom: 6px; }
+.lesson h3 { font-size: 17px; margin: 22px 0 6px; }
+.lesson p, .lesson li, .lesson dd { font-size: 15px; line-height: 1.65; }
+.lesson dt { font-weight: 600; margin-top: 10px; }
+.lesson dd { margin: 2px 0 0; }
+.lesson code { font-family: var(--font-mono); font-size: 13px; background: var(--soft); padding: 2px 6px; border-radius: 4px; }
+.tip { border-left: 3px solid var(--accent); background: var(--soft); padding: 10px 14px; border-radius: 0 6px 6px 0; }
+.livebox { border: 1px solid var(--accent); border-radius: 8px; padding: 14px 16px; margin: 18px 0; display: grid; gap: 8px; }
+.livebox .eyebrow { color: var(--accent); display: flex; align-items: center; gap: 8px; }
+.livebox p { margin: 0; }
+.lesson-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.lesson-nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.calc { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; background: var(--soft); padding: 14px; border-radius: 8px; margin: 14px 0; }
+.calc label { display: grid; gap: 3px; font-size: 12px; color: var(--muted); }
+.calc input { background: var(--panel); }
+.calc-out { grid-column: 1 / -1; font-size: 15px; }
+
+</style>
+
+<header class="bar">
+  <div class="bar-in">
+    <a class="logo" href="#marches"><span class="logo-mark" aria-hidden="true"></span>Salle des marchés</a>
+    <nav class="tabs" aria-label="Sections">
+      <a href="#marches" data-view="marches">Marchés</a>
+      <a href="#actus" data-view="actus">Actualités</a>
+      <a href="#academie" data-view="academie">Académie</a>
+    </nav>
+    <div class="search">
+      <input id="search" type="search" placeholder="Rechercher un actif (LVMH, Apple, ETH…)" autocomplete="off" aria-label="Rechercher un actif">
+      <div class="search-res" id="search-res" hidden></div>
+    </div>
+  </div>
+  <div class="ticker" id="ticker" aria-label="Cours des principaux marchés"></div>
+</header>
+
+<div class="banner" id="mock-banner" hidden>Démonstration : les cours sont fictifs et les actus figées au 17 nov. L'Académie et les indicateurs fonctionnent normalement.</div>
+
+<main class="wrap">
+  <!-- ───────── MARCHÉS ───────── -->
+  <section class="view" id="view-marches">
+    <div class="quote">
+      <div class="q-id">
+        <span class="live-dot" id="live-dot" title="Mise à jour en direct"></span>
+        <h1 id="q-name">—</h1>
+        <span class="q-sym mono" id="q-sym"></span>
+      </div>
+      <div class="q-px">
+        <span class="px mono" id="q-px">—</span>
+        <span class="chg mono" id="q-chg"></span>
+      </div>
+      <div class="q-meta muted mono" id="q-meta"></div>
+    </div>
+
+    <div class="layout">
+      <aside class="watch panel" aria-label="Liste des actifs">
+        <div id="watchlist"></div>
+      </aside>
+
+      <section class="panel chart-panel">
+        <div class="toolbar">
+          <div class="seg" id="tf" role="group" aria-label="Unité de temps">
+            <button data-tf="15m">15 min</button><button data-tf="1h">1 h</button><button data-tf="1d" class="on">1 jour</button><button data-tf="1wk">1 sem.</button>
+          </div>
+          <div class="seg" id="overlays" role="group" aria-label="Calques">
+            <button data-ov="mm" class="on">Moyennes</button><button data-ov="bollinger">Bollinger</button><button data-ov="ichimoku">Ichimoku</button><button data-ov="fibonacci">Fibonacci</button><button data-ov="levels" class="on">Niveaux</button>
+          </div>
+        </div>
+        <div class="legend" id="legend"></div>
+        <div class="chart" id="c-price"></div>
+        <div class="sub"><span>RSI 14</span><a href="#academie-rsi">Comprendre</a></div>
+        <div class="chart" id="c-rsi"></div>
+        <div class="sub"><span>MACD 12 · 26 · 9</span><a href="#academie-macd">Comprendre</a></div>
+        <div class="chart" id="c-macd"></div>
+        <div class="perf" id="perf"></div>
+        <p class="status err" id="chart-err" hidden></p>
+      </section>
+
+      <aside class="side">
+        <section class="panel">
+          <div class="eyebrow">Synthèse technique</div>
+          <div class="score-top"><span class="verdict" id="verdict">—</span><span class="mono" id="score-num"></span></div>
+          <div class="gauge" aria-hidden="true"><div class="needle" id="needle"></div></div>
+          <div class="gauge-scale mono"><span>−100</span><span>0</span><span>+100</span></div>
+          <div class="rows" id="rows"></div>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><h2>Niveaux clés</h2><a class="small" href="#academie-tendance">Comprendre</a></div>
+          <div class="levels" id="levels"></div>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><h2>Actus de l'actif</h2><a class="small" href="#actus">Toutes les actus</a></div>
+          <ul class="news compact" id="asset-news"><li class="muted">Chargement…</li></ul>
+        </section>
+      </aside>
+    </div>
+
+    <section class="panel ai">
+      <div class="panel-head">
+        <h2>Anticipations par Claude</h2>
+        <span class="badge" id="ai-state">IA</span>
+      </div>
+      <p class="muted small" style="margin:0 0 12px">Claude croise les indicateurs ci-dessus avec les derniers titres de presse sur l'actif et les marchés, puis propose trois scénarios chiffrés.</p>
+      <div class="ai-form">
+        <label>Horizon
+          <select id="horizon">
+            <option value="court terme (1 à 5 séances)">Court terme · 1–5 séances</option>
+            <option value="swing (2 à 6 semaines)" selected>Swing · 2–6 semaines</option>
+            <option value="moyen terme (3 à 6 mois)">Moyen terme · 3–6 mois</option>
+          </select>
+        </label>
+        <label>Profil
+          <select id="profil"><option value="prudent">Prudent</option><option value="équilibré" selected>Équilibré</option><option value="dynamique">Dynamique</option></select>
+        </label>
+        <label>Profondeur
+          <select id="depth"><option value="standard" selected>Standard</option><option value="approfondie">Approfondie (plus lente)</option></select>
+        </label>
+        <label class="grow">Tes notes (optionnel)
+          <input id="notes" type="text" placeholder="ex. réunion de la Fed mercredi, je suis déjà acheteur à 7 300">
+        </label>
+        <button class="primary" id="go">Générer l'analyse</button>
+      </div>
+      <p class="status" id="ai-status" role="status"></p>
+      <div class="result" id="result" hidden></div>
+      <p class="disclaimer">Outil d'aide à la décision, pas un conseil en investissement. Les scénarios sont des hypothèses fondées sur les seules données affichées. Ne risque jamais un capital que tu ne peux pas perdre.</p>
+    </section>
+  </section>
+
+  <!-- ───────── ACTUALITÉS ───────── -->
+  <section class="view" id="view-actus" hidden>
+    <div class="panel-head big">
+      <div><div class="eyebrow">Mis à jour toutes les 5 minutes</div><h1>Actualités des marchés</h1></div>
+      <input id="news-filter" type="search" placeholder="Filtrer les titres (Fed, pétrole, LVMH…)" aria-label="Filtrer les titres">
+    </div>
+    <div class="chips" id="news-sources"></div>
+    <div class="news-grid">
+      <section class="panel"><ul class="news" id="news-list"><li class="muted">Chargement des actualités…</li></ul></section>
+      <aside class="panel">
+        <div class="panel-head"><h2 id="news-asset-title">Sur l'actif suivi</h2></div>
+        <ul class="news compact" id="news-asset"></ul>
+      </aside>
+    </div>
+    <p class="muted small">Version de démonstration : titres figés des 5 au 17 novembre 2026. Sur le site en ligne, ils viennent en direct de Boursorama, BFM Business, Bloomberg, Les Échos… Les articles s'ouvrent sur le site de chaque journal.</p>
+  </section>
+
+  <!-- ───────── ACADÉMIE ───────── -->
+  <section class="view" id="view-academie" hidden>
+    <div class="academy">
+      <nav class="panel lessons" id="lessons" aria-label="Leçons"></nav>
+      <article class="panel lesson" id="lesson"></article>
+    </div>
+  </section>
+</main>
+
+
+
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<script>
+"use strict";
+// Version de démonstration hébergée sur Claude : pas de serveur.
+// Cours fictifs générés dans le navigateur, titres d'actus réels figés (16-17 nov. 2026), analyse via Claude.
+const LOCAL = (() => {
+  const STEP = { "15m": 900, "1h": 3600, "1d": 86400, "1wk": 604800 };
+  const BASE = { "^FCHI": 7400, "^GSPC": 7420, "^IXIC": 24000, "^NDX": 26000, "^DJI": 46000, "^GDAXI": 23000, "^STOXX50E": 5400, "^FTSE": 9300, "^N225": 48000, "BTC-USD": 63000, "ETH-USD": 2400, "SOL-USD": 140, "EURUSD=X": 1.07, "GBPUSD=X": 1.27, "USDJPY=X": 152, "GC=F": 3850, "SI=F": 47.7, "BZ=F": 91.7, "CL=F": 88, "MC.PA": 600, "TTE.PA": 58, "AIR.PA": 170, "BNP.PA": 70, "OR.PA": 380, "AAPL": 230, "NVDA": 160, "MSFT": 450, "TSLA": 300, "AMZN": 210 };
+  const seeded = (str) => { let s = [...str].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7); return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; };
+  function chart(symbol, tf, live) {
+    const step = STEP[tf] || 86400, rnd = seeded(symbol + tf), now = Math.floor(Date.now() / 1000 / step) * step;
+    let c = BASE[symbol] ?? 100; const bars = [];
+    for (let i = 500; i >= 0; i--) {
+      const o = c; c = o * (1 + (rnd() - 0.49) * 0.02);
+      bars.push({ time: now - i * step, open: o, high: Math.max(o, c) * (1 + rnd() * 0.006), low: Math.min(o, c) * (1 - rnd() * 0.006), close: c, volume: Math.round(1e6 * (0.5 + rnd())) });
+    }
+    const last = bars.at(-1);
+    last.close = last.open * (1 + Math.sin(Date.now() / 7000 + symbol.length) * 0.003);
+    last.high = Math.max(last.high, last.close); last.low = Math.min(last.low, last.close);
+    return { meta: { symbol, name: symbol, currency: "", exchange: "Démo", price: last.close, previousClose: bars.at(-2).close }, bars: live ? bars.slice(-5) : bars };
+  }
+  const NEWS = [
+    ["Equity Clock", "equityclock", "Les taux, le dollar et la crypto pèsent sur l'appétit pour le risque", "https://equityclock.com/2026/11/16/stock-market-outlook-for-november-17-2026/", "2026-11-16T22:00:00Z"],
+    ["Equity Clock", "equityclock", "Les investisseurs intègrent un possible ralentissement économique en 2027", "https://equityclock.com/2026/11/17/stock-market-outlook-for-november-18-2026/", "2026-11-17T22:00:00Z"],
+    ["Caleb & Brown", "calebandbrown", "Bitcoin au plus bas depuis quatre mois sur fond de paris de hausse de taux de la Fed et de sorties des ETF", "https://www.calebandbrown.com/blog/weekly-rollup-november-17-2026/", "2026-11-17T12:00:00Z"],
+    ["Centrino Capital", "centrino", "L'or progresse de 0,62 %, l'argent de 1,55 %, le Brent recule de 0,77 %", "https://centrinocapital.com/insights/market-news-2026-11-17", "2026-11-17T18:00:00Z"],
+    ["Market Scholars", "marketscholars", "Les semi-conducteurs tiennent, mais la largeur du marché se dégrade", "https://www.marketscholars.com/market-outlook-november-17-2026/", "2026-11-17T21:00:00Z"],
+    ["Investrade", "investrade", "Point du matin, 17 novembre 2026", "https://investrade.com/morning-preview-november-17-2026/", "2026-11-17T12:00:00Z"],
+    ["Test-Achats", "testachats", "Inflation américaine : pourquoi une hausse des taux de la Fed semble inévitable", "https://www.test-achats.be/invest/investir/marches-et-devises/articles/2026/11/inflation-americaine-fed-taux-decembre", "2026-11-14T09:00:00Z"],
+    ["France Transactions", "francetransactions", "Inflation américaine : +0,4 % en octobre, hausse des taux de la Fed en vue", "https://www.francetransactions.com/actus/news-finances/inflation-americaine-hausse-octobre-2026.html", "2026-11-13T09:00:00Z"],
+    ["Club Patrimoine", "clubpatrimoine", "La Fed change de braquet : l'inflation américaine relance la hausse des taux", "https://www.clubpatrimoine.com/contenus/fed-hausse-taux", "2026-11-12T09:00:00Z"],
+    ["Motley Fool", "fool", "La première estimation d'inflation de novembre de la Fed inquiète Wall Street", "https://www.fool.com/investing/2026/11/05/federal-reserve-initial-november-inflation-forecast-has-arrived-things-get-ugly-for-wall-street/", "2026-11-05T12:00:00Z"],
+  ].map(([source, sourceId, title, link, date]) => ({ source, sourceId, title, link, date }));
+  const KEYS = { "BTC": /bitcoin|crypto/i, "ETH": /crypto|ethereum/i, "SOL": /crypto/i, "GC=F": /or |gold|argent/i, "SI=F": /argent|silver/i, "BZ=F": /brent|pétrole/i, "CL=F": /brent|pétrole/i };
+
+  let sampleP = null;
+  const getSample = () => (sampleP ??= (async () => { try { return window.claude?.use ? await window.claude.use("sample") : null; } catch { return null; } })());
+
+  function prompt(p) {
+    const news = (p.news || []).slice(0, 25).map((n) => `- [${n.source}${n.date ? ", " + n.date.slice(0, 10) : ""}] ${n.title}`).join("\n");
+    return `Tu es un analyste de marché expérimenté. Rédige en français une analyse d'anticipation pour un trader particulier.
+Actif : ${p.name} (${p.symbol}). Unité de temps : ${p.timeframe}. Horizon : ${p.horizon}. Profil de risque : ${p.profil}.
+ATTENTION : les cours ci-dessous sont FICTIFS (version de démonstration). Signale-le dans le résumé et n'en tire aucune conclusion sur le marché réel ; utilise-les uniquement pour illustrer la méthode.
+Règles : appuie-toi uniquement sur les données fournies, n'invente rien. Trois scénarios (haussier, central, baissier) dont les probabilités font 100, chacun avec un déclencheur observable et un objectif chiffré cohérent avec les niveaux et l'ATR. Ton pédagogique, phrases courtes.
+
+## Données techniques
+${p.technical}
+
+## Titres d'actualité récents
+${news || "Aucun."}
+
+## Notes de l'utilisateur
+${String(p.notes || "").slice(0, 2000) || "Aucune."}
+
+Réponds UNIQUEMENT avec un objet JSON : {"biais":"haussier|neutre|baissier","confiance":0-100,"resume":"...","lecture_technique":["..."],"lecture_actus":["..."],"scenarios":[{"nom":"Haussier","probabilite":30,"declencheur":"...","objectif":123.4,"description":"..."},{"nom":"Central",...},{"nom":"Baissier",...}],"niveaux":{"supports":[0],"resistances":[0],"invalidation":0},"plan":{"approche":"...","entree":"...","stop":"...","objectifs":"...","ratio":"..."},"risques":["..."],"a_surveiller":["..."]}`;
+  }
+  const ERR = { not_granted: "Tu n'as pas autorisé la page à utiliser Claude. Recharge la page pour qu'elle te le redemande.", rate_limited: "Trop de demandes pour le moment. Réessaie dans quelques minutes.", invalid_json: "La réponse était mal formée. Clique à nouveau sur Générer.", session_expired: "Reconnecte-toi à Claude puis réessaie." };
+
+  return async function api(path, opts) {
+    const u = new URL(path, "https://x.local");
+    const q = (k) => u.searchParams.get(k);
+    switch (u.pathname) {
+      case "/api/config": { const s = await getSample(); return { ai: !!s, mock: true }; }
+      case "/api/chart": return chart(q("symbol"), q("tf"), false);
+      case "/api/live": return chart(q("symbol"), q("tf"), true);
+      case "/api/quotes": return q("symbols").split(",").map((s) => { const c = chart(s, "1d", true); return { symbol: s, price: c.meta.price, previousClose: c.meta.previousClose }; });
+      case "/api/search": return [];
+      case "/api/news": return { items: NEWS, status: [...new Map(NEWS.map((n) => [n.sourceId, { id: n.sourceId, label: n.source, ok: true, count: NEWS.filter((x) => x.sourceId === n.sourceId).length }])).values()] };
+      case "/api/news/asset": {
+        const name = q("q") || ""; const key = Object.keys(KEYS).find((k) => name.toUpperCase().includes(k) || (k.length > 3 && name.includes(k)));
+        const re = key ? KEYS[key] : null;
+        return { items: re ? NEWS.filter((n) => re.test(n.title)) : NEWS.slice(0, 6) };
+      }
+      case "/api/analyse": {
+        const sample = await getSample();
+        if (!sample) throw new Error("L'analyse fonctionne quand la page est ouverte dans Claude, connecté à ton compte.");
+        try { return await sample.json(prompt(JSON.parse(opts.body)), { cache: false }); }
+        catch (e) { throw new Error(ERR[e?.code] || "L'analyse a échoué. Réessaie."); }
+      }
+    }
+    throw new Error("Inconnu");
+  };
+})();
+
+const TA = (() => {
+// Indicateurs techniques, calculés dans le navigateur à partir des bougies OHLC.
+const closes = (b) => b.map((x) => x.close);
+
+function sma(a, n) {
+  const o = Array(a.length).fill(null); let s = 0;
+  for (let i = 0; i < a.length; i++) { s += a[i]; if (i >= n) s -= a[i - n]; if (i >= n - 1) o[i] = s / n; }
+  return o;
+}
+
+function ema(a, n) {
+  const o = Array(a.length).fill(null); const k = 2 / (n + 1); let e = null, run = 0, sum = 0;
+  for (let i = 0; i < a.length; i++) {
+    const v = a[i];
+    if (v == null) { run = 0; sum = 0; continue; }
+    if (e == null) { run++; sum += v; if (run === n) { e = sum / n; o[i] = e; } continue; }
+    e = v * k + e * (1 - k); o[i] = e;
+  }
+  return o;
+}
+
+function rsi(a, n = 14) {
+  const o = Array(a.length).fill(null); let g = 0, l = 0;
+  for (let i = 1; i < a.length; i++) {
+    const d = a[i] - a[i - 1], up = Math.max(d, 0), dn = Math.max(-d, 0);
+    if (i <= n) { g += up; l += dn; if (i === n) { g /= n; l /= n; o[i] = l === 0 ? 100 : 100 - 100 / (1 + g / l); } }
+    else { g = (g * (n - 1) + up) / n; l = (l * (n - 1) + dn) / n; o[i] = l === 0 ? 100 : 100 - 100 / (1 + g / l); }
+  }
+  return o;
+}
+
+function macd(a, f = 12, s = 26, sg = 9) {
+  const ef = ema(a, f), es = ema(a, s);
+  const m = a.map((_, i) => ef[i] != null && es[i] != null ? ef[i] - es[i] : null);
+  const sig = ema(m, sg);
+  return { m, sig, hist: m.map((v, i) => v != null && sig[i] != null ? v - sig[i] : null) };
+}
+
+function bollinger(a, n = 20, k = 2) {
+  const mid = sma(a, n), up = [], lo = [];
+  for (let i = 0; i < a.length; i++) {
+    if (mid[i] == null) { up.push(null); lo.push(null); continue; }
+    let s = 0; for (let j = i - n + 1; j <= i; j++) s += (a[j] - mid[i]) ** 2;
+    const sd = Math.sqrt(s / n); up.push(mid[i] + k * sd); lo.push(mid[i] - k * sd);
+  }
+  return { mid, up, lo };
+}
+
+function atr(b, n = 14) {
+  const o = Array(b.length).fill(null); let v = null, sum = 0;
+  for (let i = 0; i < b.length; i++) {
+    const x = b[i];
+    const tr = i === 0 ? x.high - x.low : Math.max(x.high - x.low, Math.abs(x.high - b[i - 1].close), Math.abs(x.low - b[i - 1].close));
+    if (i < n) { sum += tr; if (i === n - 1) { v = sum / n; o[i] = v; } continue; }
+    v = (v * (n - 1) + tr) / n; o[i] = v;
+  }
+  return o;
+}
+
+function stochastic(b, n = 14, d = 3) {
+  const k = b.map((_, i) => {
+    if (i < n - 1) return null;
+    const seg = b.slice(i - n + 1, i + 1);
+    const hi = Math.max(...seg.map((x) => x.high)), lo = Math.min(...seg.map((x) => x.low));
+    return hi === lo ? 50 : (b[i].close - lo) / (hi - lo) * 100;
+  });
+  const first = k.findIndex((x) => x != null);
+  const dd = Array(b.length).fill(null);
+  if (first >= 0) sma(k.slice(first), d).forEach((v, j) => (dd[first + j] = v));
+  return { k, d: dd };
+}
+
+// Ichimoku Kinko Hyo : Tenkan 9, Kijun 26, SSB 52, décalage 26.
+function ichimoku(b, t = 9, k = 26, sb = 52, shift = 26) {
+  const mid = (i, n) => {
+    if (i < n - 1) return null;
+    let hi = -Infinity, lo = Infinity;
+    for (let j = i - n + 1; j <= i; j++) { hi = Math.max(hi, b[j].high); lo = Math.min(lo, b[j].low); }
+    return (hi + lo) / 2;
+  };
+  const tenkan = b.map((_, i) => mid(i, t));
+  const kijun = b.map((_, i) => mid(i, k));
+  const ssaRaw = b.map((_, i) => tenkan[i] != null && kijun[i] != null ? (tenkan[i] + kijun[i]) / 2 : null);
+  const ssbRaw = b.map((_, i) => mid(i, sb));
+  // Les deux lignes du nuage sont projetées "shift" bougies dans le futur.
+  const step = b.length > 1 ? b.at(-1).time - b.at(-2).time : 86400;
+  const timeAt = (i) => (i < b.length ? b[i].time : b.at(-1).time + (i - b.length + 1) * step);
+  const ssa = [], ssb = [];
+  for (let i = 0; i < b.length; i++) {
+    if (ssaRaw[i] != null) ssa.push({ time: timeAt(i + shift), value: ssaRaw[i] });
+    if (ssbRaw[i] != null) ssb.push({ time: timeAt(i + shift), value: ssbRaw[i] });
+  }
+  const chikou = b.slice(shift).map((x, i) => ({ time: b[i].time, value: x.close }));
+  // Nuage applicable à la bougie actuelle = valeurs calculées il y a "shift" bougies.
+  const n = b.length - 1;
+  const cloudNow = { a: ssaRaw[n - shift] ?? null, b: ssbRaw[n - shift] ?? null };
+  const cloudFuture = { a: ssaRaw[n], b: ssbRaw[n] };
+  return { tenkan, kijun, ssa, ssb, chikou, cloudNow, cloudFuture };
+}
+
+// Retracements de Fibonacci sur le dernier mouvement significatif (plus haut / plus bas de la fenêtre).
+const FIB_LEVELS = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+function fibonacci(b, lookback = 120) {
+  const seg = b.slice(-lookback);
+  let hiI = 0, loI = 0;
+  seg.forEach((x, i) => { if (x.high > seg[hiI].high) hiI = i; if (x.low < seg[loI].low) loI = i; });
+  const hi = seg[hiI].high, lo = seg[loI].low;
+  const upMove = loI < hiI; // le creux précède le sommet : on mesure le repli d'une hausse
+  const levels = FIB_LEVELS.map((r) => ({ ratio: r, price: upMove ? hi - (hi - lo) * r : lo + (hi - lo) * r }));
+  return { hi, lo, upMove, levels, from: seg[upMove ? loI : hiI].time, to: seg[upMove ? hiI : loI].time };
+}
+
+function pivots(b, atrNow) {
+  const look = b.slice(-250), w = 5, pts = [];
+  for (let i = w; i < look.length - w; i++) {
+    let isHi = true, isLo = true;
+    for (let j = i - w; j <= i + w; j++) { if (look[j].high > look[i].high) isHi = false; if (look[j].low < look[i].low) isLo = false; }
+    if (isHi) pts.push(look[i].high);
+    if (isLo) pts.push(look[i].low);
+  }
+  const tol = (atrNow || look.at(-1).close * 0.01) * 0.8;
+  const clusters = [];
+  pts.sort((x, y) => x - y).forEach((p) => {
+    const c = clusters.at(-1);
+    if (c && p - c.max <= tol) { c.sum += p; c.n++; c.max = p; } else clusters.push({ sum: p, n: 1, max: p });
+  });
+  return clusters.map((c) => ({ level: c.sum / c.n, touches: c.n }));
+}
+
+function interval(b) {
+  const d = [];
+  for (let i = Math.max(1, b.length - 60); i < b.length; i++) d.push(b[i].time - b[i - 1].time);
+  d.sort((x, y) => x - y);
+  return d[Math.floor(d.length / 2)] || 86400;
+}
+
+// Analyse complète + score synthétique de -100 à +100.
+function analyse(b, tf) {
+  const c = closes(b), n = b.length - 1;
+  const m20 = sma(c, 20), m50 = sma(c, 50), m200 = sma(c, 200);
+  const r = rsi(c), md = macd(c), bb = bollinger(c), at = atr(b), st = stochastic(b), ich = ichimoku(b), fib = fibonacci(b);
+  const last = c[n], prev = c[n - 1];
+  const per = tf === "1d" ? [[5, "1 semaine"], [21, "1 mois"], [63, "3 mois"], [252, "1 an"]]
+    : tf === "1wk" ? [[4, "1 mois"], [13, "3 mois"], [26, "6 mois"], [52, "1 an"]]
+    : [[5, "5 bougies"], [20, "20 bougies"], [60, "60 bougies"], [200, "200 bougies"]];
+  const perf = per.map(([k, lbl]) => ({ lbl, v: n - k >= 0 ? (last / c[n - k] - 1) * 100 : null }));
+  const win = b.slice(-Math.min(tf === "1d" ? 252 : 200, b.length));
+  const hi52 = Math.max(...win.map((x) => x.high)), lo52 = Math.min(...win.map((x) => x.low));
+
+  const sig = []; let score = 0, wsum = 0;
+  const add = (label, detail, value, s, w, txt, lesson) => { sig.push({ label, detail, value, s, txt, lesson }); score += s * w; wsum += w; };
+  const pc = (v) => (v > 0 ? "+" : "") + (v * 100).toFixed(2).replace(".", ",") + " %";
+  if (m50[n] != null) add("Prix / MM50", "tendance intermédiaire", pc(last / m50[n] - 1), last > m50[n] ? 1 : -1, 1.2, last > m50[n] ? "Au-dessus" : "En dessous", "mm");
+  if (m200[n] != null) add("Prix / MM200", "tendance de fond", pc(last / m200[n] - 1), last > m200[n] ? 1 : -1, 1.5, last > m200[n] ? "Au-dessus" : "En dessous", "mm");
+  if (m50[n] != null && m200[n] != null) { const up = m50[n] > m200[n]; add("MM50 / MM200", up ? "configuration haussière" : "configuration baissière", up ? "croix dorée" : "croix de la mort", up ? 1 : -1, 1, up ? "Haussier" : "Baissier", "mm"); }
+  if (r[n] != null) { const v = r[n]; let s, t; if (v >= 70) { s = -0.3; t = "Suracheté"; } else if (v >= 55) { s = 1; t = "Haussier"; } else if (v > 45) { s = 0; t = "Neutre"; } else if (v > 30) { s = -1; t = "Baissier"; } else { s = 0.3; t = "Survendu"; } add("RSI 14", v >= 70 || v <= 30 ? "zone extrême" : "momentum", v.toFixed(1).replace(".", ","), s, 1, t, "rsi"); }
+  if (md.m[n] != null && md.sig[n] != null) { const up = md.m[n] > md.sig[n]; const acc = md.hist[n] > (md.hist[n - 1] ?? 0); add("MACD", up ? (acc ? "au-dessus du signal, accélère" : "au-dessus du signal, ralentit") : (acc ? "sous le signal, se redresse" : "sous le signal, s'aggrave"), md.hist[n].toFixed(Math.abs(md.hist[n]) < 1 ? 4 : 2).replace(".", ","), up ? (acc ? 1 : 0.5) : (acc ? -0.5 : -1), 1, up ? "Haussier" : "Baissier", "macd"); }
+  if (ich.cloudNow.a != null && ich.cloudNow.b != null) {
+    const top = Math.max(ich.cloudNow.a, ich.cloudNow.b), bot = Math.min(ich.cloudNow.a, ich.cloudNow.b);
+    const pos = last > top ? 1 : last < bot ? -1 : 0;
+    const tk = ich.tenkan[n] > ich.kijun[n];
+    add("Ichimoku", (tk ? "Tenkan au-dessus de Kijun" : "Tenkan sous Kijun") + (ich.cloudFuture.a > ich.cloudFuture.b ? ", nuage futur vert" : ", nuage futur rouge"), pos > 0 ? "au-dessus du nuage" : pos < 0 ? "sous le nuage" : "dans le nuage", pos === 0 ? 0 : pos * (tk === (pos > 0) ? 1 : 0.5), 1.2, pos > 0 ? "Haussier" : pos < 0 ? "Baissier" : "Indécis", "ichimoku");
+  }
+  if (bb.up[n] != null) { const p = (last - bb.lo[n]) / (bb.up[n] - bb.lo[n]); add("Bollinger %B", `largeur ${((bb.up[n] - bb.lo[n]) / bb.mid[n] * 100).toFixed(1).replace(".", ",")} %`, Math.round(p * 100) + " %", p > 1 ? -0.3 : p < 0 ? 0.3 : p > 0.5 ? 0.5 : -0.5, 0.6, p > 1 ? "Hors bande haute" : p < 0 ? "Hors bande basse" : p > 0.5 ? "Moitié haute" : "Moitié basse", "bollinger"); }
+  if (st.k[n] != null) { const v = st.k[n]; add("Stochastique", "%K 14", v.toFixed(0), v > 80 ? -0.3 : v < 20 ? 0.3 : v > 50 ? 0.4 : -0.4, 0.5, v > 80 ? "Suracheté" : v < 20 ? "Survendu" : v > 50 ? "Haussier" : "Baissier", "stochastique"); }
+
+  const finalScore = wsum ? Math.round(score / wsum * 100) : 0;
+  const atrNow = at[n];
+  const lv = pivots(b, atrNow);
+  const res = lv.filter((x) => x.level > last * 1.002).sort((x, y) => x.level - y.level).slice(0, 3);
+  const sup = lv.filter((x) => x.level < last * 0.998).sort((x, y) => y.level - x.level).slice(0, 3);
+  return { b, c, n, m20, m50, m200, r, md, bb, at, st, ich, fib, last, prev, perf, sig, score: finalScore, res, sup, atrNow, hi52, lo52, iv: interval(b) };
+}
+
+function verdictOf(s) {
+  if (s >= 45) return ["Haussier", "up"];
+  if (s >= 15) return ["Plutôt haussier", "up"];
+  if (s > -15) return ["Neutre", "flat"];
+  if (s > -45) return ["Plutôt baissier", "down"];
+  return ["Baissier", "down"];
+}
+
+return {closes, sma, ema, rsi, macd, bollinger, atr, stochastic, ichimoku, FIB_LEVELS, fibonacci, pivots, interval, analyse, verdictOf};
+})();
+const { MODULES, LESSONS } = (() => {
+// Contenu pédagogique de l'Académie.
+// Chaque leçon peut avoir un encart "live" calculé sur l'actif affiché (fonction live(A, h)),
+// un calque à afficher sur le graphique (overlay) ou un actif à ouvrir (symbol).
+
+const MODULES = [
+  { id: "bases", title: "Les bases du trading" },
+  { id: "indicateurs", title: "Indicateurs techniques" },
+  { id: "indices", title: "Les grands indices" },
+];
+
+const LESSONS = [
+  // ───────────── BASES ─────────────
+  {
+    id: "marche", module: "bases", title: "Comprendre un cours de bourse", minutes: 5,
+    body: `
+<p>Un cours est le dernier prix auquel un acheteur et un vendeur se sont mis d'accord. Il bouge parce que l'équilibre entre l'offre et la demande change en permanence.</p>
+<h3>Les mots à connaître</h3>
+<dl>
+<dt>Bid / Ask</dt><dd>Le <b>bid</b> est le meilleur prix proposé par un acheteur, l'<b>ask</b> le meilleur prix proposé par un vendeur. Quand tu achètes « au marché », tu paies l'ask.</dd>
+<dt>Spread</dt><dd>L'écart entre ask et bid. C'est un coût caché à chaque aller-retour. Il est faible sur les actifs très échangés (CAC 40, EUR/USD) et plus large sur les petites valeurs.</dd>
+<dt>Volatilité</dt><dd>L'amplitude habituelle des mouvements. Une action qui varie de 3 % par jour est plus volatile qu'une autre qui varie de 0,5 %.</dd>
+<dt>Liquidité</dt><dd>La facilité à acheter ou vendre sans faire bouger le prix. Plus il y a d'échanges, plus c'est liquide.</dd>
+<dt>Unité de temps</dt><dd>La durée représentée par une bougie : 15 minutes, 1 heure, 1 jour, 1 semaine. Un même actif peut monter en hebdomadaire et baisser en 15 minutes.</dd>
+</dl>
+<h3>Qui fait bouger les prix ?</h3>
+<p>Les résultats des entreprises, les taux d'intérêt des banques centrales, l'inflation, les annonces politiques, mais aussi la psychologie des intervenants. L'analyse <b>fondamentale</b> étudie les causes (économie, comptes des sociétés). L'analyse <b>technique</b> étudie le prix lui-même et les comportements qu'il révèle. Les deux se complètent.</p>`,
+    live: (A, h) => `Sur <b>${h.name}</b>, la volatilité moyenne (ATR 14) vaut <b>${h.fmt(A.atrNow)}</b>, soit ${h.pctAbs(A.atrNow / A.last)} du cours par bougie de ${h.tfLabel}.`,
+  },
+  {
+    id: "chandeliers", module: "bases", title: "Lire les chandeliers japonais", minutes: 7,
+    body: `
+<p>Chaque bougie résume une période avec quatre prix : ouverture, plus haut, plus bas et clôture.</p>
+<ul>
+<li>Le <b>corps</b> relie l'ouverture à la clôture. Vert (ou creux) si la clôture est au-dessus de l'ouverture, rouge sinon.</li>
+<li>Les <b>mèches</b> montrent les extrêmes atteints. Une longue mèche signale un rejet : le prix y est allé mais n'a pas tenu.</li>
+</ul>
+<h3>Figures utiles</h3>
+<dl>
+<dt>Doji</dt><dd>Ouverture et clôture presque égales. Indécision. Intéressant après un long mouvement.</dd>
+<dt>Marteau</dt><dd>Petit corps en haut, longue mèche basse, après une baisse. Les vendeurs ont poussé, les acheteurs ont repris la main.</dd>
+<dt>Étoile filante</dt><dd>L'inverse du marteau, après une hausse. Rejet des prix hauts.</dd>
+<dt>Avalement (englobante)</dt><dd>Une bougie dont le corps recouvre entièrement celui de la précédente, en sens inverse. Signal de retournement plus fort quand il apparaît sur un support ou une résistance.</dd>
+</dl>
+<p class="tip">Une figure isolée ne suffit jamais. Elle prend de la valeur quand elle se forme sur un niveau clé et qu'un indicateur la confirme.</p>`,
+    live: (A, h) => {
+      const x = A.b.at(-1), body = Math.abs(x.close - x.open), range = x.high - x.low || 1;
+      const upW = x.high - Math.max(x.open, x.close), loW = Math.min(x.open, x.close) - x.low;
+      let t = x.close >= x.open ? "haussière" : "baissière";
+      if (body / range < 0.1) t = "proche d'un doji (indécision)";
+      else if (loW > body * 2 && upW < body) t += ", avec une longue mèche basse (rejet des prix bas)";
+      else if (upW > body * 2 && loW < body) t += ", avec une longue mèche haute (rejet des prix hauts)";
+      return `La dernière bougie de <b>${h.name}</b> est ${t}. Ouverture ${h.fmt(x.open)}, plus haut ${h.fmt(x.high)}, plus bas ${h.fmt(x.low)}, clôture ${h.fmt(x.close)}.`;
+    },
+  },
+  {
+    id: "tendance", module: "bases", title: "Tendance, supports et résistances", minutes: 6,
+    body: `
+<p>Une <b>tendance haussière</b> enchaîne des sommets et des creux de plus en plus hauts. Une tendance baissière, des sommets et des creux de plus en plus bas. Entre les deux, le marché est en <b>range</b> (il oscille latéralement).</p>
+<h3>Support et résistance</h3>
+<p>Un <b>support</b> est une zone où les acheteurs sont revenus plusieurs fois. Une <b>résistance</b>, une zone où les vendeurs ont repris la main. Plus un niveau a été touché, plus il est surveillé.</p>
+<p>Quand une résistance est franchie nettement, elle devient souvent un support : c'est le <b>changement de polarité</b>. Les traders attendent fréquemment ce « retest » pour entrer.</p>
+<p class="tip">Pense en <b>zones</b>, pas en prix exacts. L'outil regroupe les sommets et creux proches en tenant compte de la volatilité (ATR).</p>`,
+    live: (A, h) => `Supports les plus proches sur <b>${h.name}</b> : ${A.sup.map((s) => h.fmt(s.level)).join(", ") || "aucun détecté"}. Résistances : ${A.res.map((s) => h.fmt(s.level)).join(", ") || "aucune détectée"}.`,
+  },
+  {
+    id: "ordres", module: "bases", title: "Les types d'ordres", minutes: 5,
+    body: `
+<dl>
+<dt>Ordre au marché</dt><dd>Exécuté tout de suite au meilleur prix disponible. Rapide, mais le prix final n'est pas garanti (on parle de <i>slippage</i>).</dd>
+<dt>Ordre à cours limité</dt><dd>Tu fixes un prix maximum à l'achat ou minimum à la vente. Prix garanti, exécution non garantie.</dd>
+<dt>Stop (stop loss)</dt><dd>Devient un ordre au marché quand un seuil est touché. Sert à couper une perte automatiquement. Indispensable.</dd>
+<dt>Stop limite</dt><dd>Comme un stop, mais devient un ordre limité. Évite une exécution trop loin, au risque de ne pas être exécuté du tout lors d'un décrochage.</dd>
+<dt>Stop suiveur</dt><dd>Le seuil remonte avec le prix (à l'achat) et ne redescend jamais. Il protège les gains d'une tendance.</dd>
+<dt>Take profit</dt><dd>Ordre limité placé à l'objectif pour encaisser le gain.</dd>
+</dl>
+<p class="tip">Avant chaque position, décide de trois prix : entrée, stop et objectif. Si tu ne peux pas placer de stop logique, ne prends pas la position.</p>`,
+  },
+  {
+    id: "risque", module: "bases", title: "Gestion du risque et taille de position", minutes: 8,
+    body: `
+<p>La survie d'un trader dépend moins de ses bonnes idées que de la taille de ses pertes. Trois règles simples :</p>
+<ol>
+<li><b>Risquer une petite part du capital par trade</b>, en général 0,5 % à 2 %. Avec 1 %, il faut 10 pertes d'affilée pour perdre environ 10 % du compte.</li>
+<li><b>Viser un rapport gain/risque d'au moins 1,5 à 2.</b> Avec un ratio de 2, tu peux te tromper plus d'une fois sur deux et rester gagnant.</li>
+<li><b>Calculer la taille de position à partir du stop</b>, jamais l'inverse.</li>
+</ol>
+<p>Formule : <code>taille = (capital × risque %) ÷ (entrée − stop)</code>.</p>
+<p>Exemple : capital 10 000 €, risque 1 % (100 €), entrée 50 €, stop 48 €. Risque par action 2 €, donc 50 actions, soit une position de 2 500 €.</p>
+<p>Attention à l'effet de levier (CFD, futures, turbos) : il multiplie les gains et les pertes. La règle du risque par trade s'applique toujours sur la perte possible, pas sur le montant engagé.</p>`,
+    calculator: true,
+  },
+  {
+    id: "psycho", module: "bases", title: "Psychologie et plan de trading", minutes: 5,
+    body: `
+<p>Les erreurs qui coûtent le plus cher sont rarement techniques :</p>
+<ul>
+<li><b>Déplacer son stop</b> pour « laisser une chance » à une position perdante.</li>
+<li><b>Revenge trading</b> : reprendre une position plus grosse juste après une perte pour se refaire.</li>
+<li><b>FOMO</b> : acheter un actif qui a déjà flambé par peur de rater le mouvement.</li>
+<li><b>Couper trop tôt les gains</b> et laisser courir les pertes.</li>
+</ul>
+<h3>Ton plan de trading, par écrit</h3>
+<ol>
+<li>Les marchés et unités de temps que tu trades.</li>
+<li>Tes conditions d'entrée précises (par exemple : prix au-dessus de la MM200 et RSI qui repasse au-dessus de 50).</li>
+<li>Où placer le stop et l'objectif.</li>
+<li>Le risque maximum par trade, par jour et par semaine.</li>
+<li>Un journal : chaque trade noté avec sa raison, son résultat et ce que tu en retiens.</li>
+</ol>`,
+  },
+
+  // ───────────── INDICATEURS ─────────────
+  {
+    id: "mm", module: "indicateurs", title: "Moyennes mobiles", minutes: 6, overlay: "mm",
+    body: `
+<p>Une moyenne mobile lisse le prix sur N bougies pour faire ressortir la tendance. La <b>MM simple</b> donne le même poids à chaque bougie. La <b>moyenne exponentielle</b> (EMA) réagit plus vite car elle favorise les données récentes.</p>
+<h3>Les réglages classiques</h3>
+<ul>
+<li><b>MM20</b> : tendance courte.</li>
+<li><b>MM50</b> : tendance intermédiaire, très suivie par les gérants.</li>
+<li><b>MM200</b> : tendance de fond. Au-dessus, le marché est considéré comme haussier sur le long terme.</li>
+</ul>
+<h3>Signaux</h3>
+<ul>
+<li>Le prix au-dessus de ses moyennes, elles-mêmes bien rangées (MM20 > MM50 > MM200) : tendance haussière saine.</li>
+<li><b>Croix dorée</b> : la MM50 passe au-dessus de la MM200. <b>Croix de la mort</b> : l'inverse. Ces signaux sont lents et arrivent souvent tard.</li>
+<li>En tendance, les moyennes servent de supports ou résistances dynamiques.</li>
+</ul>
+<p class="tip">Les moyennes mobiles fonctionnent bien en tendance et donnent beaucoup de faux signaux en range.</p>`,
+    live: (A, h) => {
+      const n = A.n;
+      const pos = (m, l) => m[n] == null ? `${l} pas encore calculable` : `${A.last > m[n] ? "au-dessus" : "en dessous"} de la ${l} (${h.fmt(m[n])})`;
+      return `<b>${h.name}</b> est ${pos(A.m20, "MM20")}, ${pos(A.m50, "MM50")} et ${pos(A.m200, "MM200")}.`;
+    },
+  },
+  {
+    id: "rsi", module: "indicateurs", title: "RSI (Relative Strength Index)", minutes: 5,
+    body: `
+<p>Le RSI mesure la force des hausses par rapport aux baisses sur 14 bougies. Il oscille entre 0 et 100.</p>
+<ul>
+<li><b>Au-dessus de 70</b> : zone de surachat. Le mouvement est fort, peut-être excessif.</li>
+<li><b>Sous 30</b> : zone de survente.</li>
+<li><b>Autour de 50</b> : ligne de partage. En tendance haussière, le RSI rebondit souvent vers 40-50.</li>
+</ul>
+<h3>Le piège classique</h3>
+<p>« Suracheté » ne veut pas dire « va baisser ». En forte tendance, le RSI peut rester au-dessus de 70 pendant des semaines. Le signal le plus fiable est la <b>divergence</b> : le prix fait un nouveau sommet mais le RSI fait un sommet plus bas. L'élan s'essouffle.</p>`,
+    live: (A, h) => {
+      const v = A.r[A.n];
+      if (v == null) return "Pas assez d'historique pour calculer le RSI.";
+      const z = v >= 70 ? "en zone de surachat" : v <= 30 ? "en zone de survente" : v >= 50 ? "au-dessus de 50, momentum plutôt acheteur" : "sous 50, momentum plutôt vendeur";
+      return `RSI 14 de <b>${h.name}</b> : <b>${v.toFixed(1).replace(".", ",")}</b>, ${z}.`;
+    },
+  },
+  {
+    id: "macd", module: "indicateurs", title: "MACD", minutes: 5,
+    body: `
+<p>Le MACD est l'écart entre deux moyennes exponentielles (12 et 26). On lui ajoute une <b>ligne de signal</b> (moyenne à 9 du MACD) et un <b>histogramme</b> (MACD moins signal).</p>
+<ul>
+<li>MACD qui croise son signal vers le haut : accélération haussière.</li>
+<li>Passage du MACD au-dessus de zéro : la moyenne courte repasse au-dessus de la longue, la tendance se confirme.</li>
+<li>Histogramme qui rétrécit : le mouvement ralentit, souvent avant le croisement.</li>
+</ul>
+<p class="tip">Le MACD suit le prix avec du retard. Il confirme une tendance mieux qu'il ne l'anticipe.</p>`,
+    live: (A, h) => {
+      const n = A.n, m = A.md.m[n], s = A.md.sig[n], hi = A.md.hist[n], hp = A.md.hist[n - 1];
+      if (m == null || s == null) return "Pas assez d'historique pour le MACD.";
+      return `Sur <b>${h.name}</b>, le MACD est ${m > s ? "au-dessus" : "en dessous"} de son signal et ${m > 0 ? "au-dessus" : "en dessous"} de zéro. L'histogramme ${Math.abs(hi) > Math.abs(hp ?? 0) ? "s'élargit (le mouvement accélère)" : "se resserre (le mouvement ralentit)"}.`;
+    },
+  },
+  {
+    id: "bollinger", module: "indicateurs", title: "Bandes de Bollinger", minutes: 5, overlay: "bollinger",
+    body: `
+<p>Trois courbes : une moyenne à 20 et deux bandes placées à 2 écarts-types au-dessus et en dessous. Environ 95 % des clôtures restent à l'intérieur quand le marché est « normal ».</p>
+<ul>
+<li><b>Resserrement</b> (squeeze) : la volatilité est faible, un mouvement fort se prépare souvent. La direction n'est pas donnée par les bandes.</li>
+<li><b>Prix qui longe la bande haute</b> : tendance haussière puissante, pas forcément un signal de vente.</li>
+<li>En range, les contacts avec les bandes servent de zones de retournement.</li>
+</ul>
+<p>Le <b>%B</b> situe le prix dans les bandes : 0 % sur la bande basse, 100 % sur la bande haute.</p>`,
+    live: (A, h) => {
+      const n = A.n; if (A.bb.up[n] == null) return "Pas assez d'historique.";
+      const w = (A.bb.up[n] - A.bb.lo[n]) / A.bb.mid[n] * 100;
+      const p = (A.last - A.bb.lo[n]) / (A.bb.up[n] - A.bb.lo[n]) * 100;
+      const ws = A.bb.up.slice(-120).map((u, i) => { const j = A.b.length - 120 + i; return u == null ? null : (u - A.bb.lo[j]) / A.bb.mid[j] * 100; }).filter((x) => x != null);
+      const minW = Math.min(...ws);
+      return `Sur <b>${h.name}</b>, le %B est à ${Math.round(p)} % et les bandes ont une largeur de ${w.toFixed(1).replace(".", ",")} %${w <= minW * 1.15 ? ", proche de leur plus bas sur 120 bougies : resserrement en cours" : ""}.`;
+    },
+  },
+  {
+    id: "fibonacci", module: "indicateurs", title: "Retracements de Fibonacci", minutes: 7, overlay: "fibonacci",
+    body: `
+<p>Après un mouvement fort, le prix corrige souvent une partie de ce mouvement avant de repartir. Les retracements de Fibonacci donnent des zones probables de fin de correction.</p>
+<h3>Les ratios</h3>
+<ul>
+<li><b>23,6 %</b> : correction faible, tendance très forte.</li>
+<li><b>38,2 %</b> : correction normale en tendance saine.</li>
+<li><b>50 %</b> : pas un nombre de Fibonacci, mais très surveillé.</li>
+<li><b>61,8 %</b> : le « nombre d'or ». Zone clé : au-delà, la tendance est sérieusement remise en cause.</li>
+<li><b>78,6 %</b> : dernière ligne de défense.</li>
+</ul>
+<p>Ces ratios viennent de la suite de Fibonacci (1, 1, 2, 3, 5, 8, 13…), où chaque nombre divisé par le suivant tend vers 0,618.</p>
+<h3>Comment les tracer</h3>
+<p>En tendance haussière, du plus bas vers le plus haut du mouvement. Les niveaux se lisent alors de haut en bas. L'outil prend automatiquement le plus haut et le plus bas des 120 dernières bougies.</p>
+<p class="tip">Un niveau de Fibonacci qui coïncide avec un support, une moyenne mobile ou le nuage Ichimoku est bien plus solide qu'un niveau isolé (on parle de <b>confluence</b>).</p>
+<h3>Les extensions</h3>
+<p>Pour fixer des objectifs au-delà du dernier sommet, on utilise 127,2 % et 161,8 % du mouvement.</p>`,
+    live: (A, h) => {
+      const f = A.fib;
+      const near = f.levels.reduce((x, y) => Math.abs(y.price - A.last) < Math.abs(x.price - A.last) ? y : x);
+      return `Mouvement de référence sur <b>${h.name}</b> : ${f.upMove ? "hausse" : "baisse"} de ${h.fmt(f.upMove ? f.lo : f.hi)} à ${h.fmt(f.upMove ? f.hi : f.lo)}.<br>${f.levels.filter((l) => l.ratio > 0 && l.ratio < 1).map((l) => `${(l.ratio * 100).toFixed(1).replace(".", ",")} % : <b>${h.fmt(l.price)}</b>`).join(" · ")}<br>Le cours est le plus proche du niveau ${(near.ratio * 100).toFixed(1).replace(".", ",")} %.`;
+    },
+  },
+  {
+    id: "ichimoku", module: "indicateurs", title: "Ichimoku Kinko Hyo", minutes: 10, overlay: "ichimoku",
+    body: `
+<p>Ichimoku (« équilibre en un coup d'œil ») est un système japonais complet : il donne la tendance, le momentum et des supports/résistances sur un seul graphique. Il comporte cinq lignes.</p>
+<dl>
+<dt>Tenkan-sen (ligne de conversion)</dt><dd>Milieu du plus haut et du plus bas des 9 dernières bougies. Tendance courte.</dd>
+<dt>Kijun-sen (ligne de base)</dt><dd>Même calcul sur 26 bougies. Tendance moyenne et support/résistance clé.</dd>
+<dt>Senkou Span A</dt><dd>Moyenne de Tenkan et Kijun, projetée 26 bougies dans le futur.</dd>
+<dt>Senkou Span B</dt><dd>Milieu du plus haut et du plus bas sur 52 bougies, projeté 26 bougies dans le futur.</dd>
+<dt>Kumo (le nuage)</dt><dd>L'espace entre Span A et Span B. Vert quand A est au-dessus de B, rouge sinon.</dd>
+<dt>Chikou Span</dt><dd>Le cours de clôture décalé de 26 bougies dans le passé. Il confirme quand il est libre au-dessus (ou en dessous) des prix passés.</dd>
+</dl>
+<h3>Lecture en 4 questions</h3>
+<ol>
+<li>Le prix est-il au-dessus, dans ou sous le nuage ? Au-dessus : biais haussier. Dans : indécision.</li>
+<li>Tenkan est-elle au-dessus de Kijun ? Le croisement est un signal, plus fort s'il a lieu au-dessus du nuage.</li>
+<li>Le nuage futur est-il vert ou rouge ? Il annonce la tendance attendue.</li>
+<li>La Chikou est-elle libre au-dessus des prix d'il y a 26 bougies ?</li>
+</ol>
+<p class="tip">Un nuage épais est un support ou une résistance solide. Un nuage fin se traverse facilement.</p>`,
+    live: (A, h) => {
+      const i = A.ich, n = A.n;
+      if (i.cloudNow.a == null || i.cloudNow.b == null) return "Pas assez d'historique pour Ichimoku (il faut au moins 78 bougies).";
+      const top = Math.max(i.cloudNow.a, i.cloudNow.b), bot = Math.min(i.cloudNow.a, i.cloudNow.b);
+      const pos = A.last > top ? "au-dessus du nuage (biais haussier)" : A.last < bot ? "sous le nuage (biais baissier)" : "dans le nuage (indécision)";
+      const tk = i.tenkan[n] > i.kijun[n] ? "au-dessus" : "en dessous";
+      const fut = i.cloudFuture.a > i.cloudFuture.b ? "vert" : "rouge";
+      const ch = A.c[n - 26] != null ? (A.last > A.c[n - 26] ? "au-dessus" : "en dessous") : "non calculable";
+      return `<b>${h.name}</b> est ${pos}, entre ${h.fmt(bot)} et ${h.fmt(top)}. Tenkan (${h.fmt(i.tenkan[n])}) est ${tk} de Kijun (${h.fmt(i.kijun[n])}). Le nuage projeté est ${fut}. La Chikou est ${ch} du prix d'il y a 26 bougies.`;
+    },
+  },
+  {
+    id: "stochastique", module: "indicateurs", title: "Stochastique", minutes: 4,
+    body: `
+<p>Le stochastique situe la clôture par rapport à la fourchette des 14 dernières bougies : 100 % si elle est au plus haut, 0 % si elle est au plus bas. La ligne %D est une moyenne à 3 de %K.</p>
+<ul>
+<li>Au-dessus de 80 : surachat. Sous 20 : survente.</li>
+<li>Le signal le plus utilisé est le croisement de %K et %D en sortie de zone extrême.</li>
+</ul>
+<p>Plus nerveux que le RSI, il convient bien aux marchés sans tendance et aux unités de temps courtes.</p>`,
+    live: (A, h) => {
+      const k = A.st.k[A.n], d = A.st.d[A.n];
+      if (k == null) return "Pas assez d'historique.";
+      return `Stochastique de <b>${h.name}</b> : %K ${k.toFixed(0)}, %D ${d != null ? d.toFixed(0) : "—"}${k > 80 ? ", zone de surachat" : k < 20 ? ", zone de survente" : ""}.`;
+    },
+  },
+  {
+    id: "atr", module: "indicateurs", title: "ATR et placement du stop", minutes: 4,
+    body: `
+<p>L'ATR (Average True Range) mesure l'amplitude moyenne d'une bougie, écarts d'ouverture compris. Il ne donne aucune direction, seulement l'agitation du marché.</p>
+<p>Usage principal : placer un stop hors du « bruit ». Un stop à moins d'un ATR de l'entrée risque d'être touché par une simple oscillation normale. Beaucoup de traders utilisent 1,5 à 2 ATR.</p>
+<p>Il sert aussi à adapter la taille de position : quand l'ATR double, on divise la taille par deux pour garder le même risque.</p>`,
+    live: (A, h) => `ATR 14 de <b>${h.name}</b> : ${h.fmt(A.atrNow)}. Un stop à 2 ATR sous le cours se situerait vers <b>${h.fmt(A.last - 2 * A.atrNow)}</b>, au-dessus vers <b>${h.fmt(A.last + 2 * A.atrNow)}</b> pour une vente.`,
+  },
+  {
+    id: "volume", module: "indicateurs", title: "Le volume", minutes: 4,
+    body: `
+<p>Le volume compte les titres échangés pendant la bougie. Il mesure la conviction derrière un mouvement.</p>
+<ul>
+<li>Cassure d'une résistance <b>avec</b> un fort volume : plus crédible.</li>
+<li>Hausse avec un volume qui baisse : l'intérêt s'essouffle.</li>
+<li>Pic de volume après une longue baisse : parfois une capitulation, qui précède un rebond.</li>
+</ul>
+<p class="tip">Sur les indices et le forex, le volume affiché par les fournisseurs gratuits est incomplet ou absent. Il est plus fiable sur les actions et les cryptos.</p>`,
+    live: (A, h) => {
+      const v = A.b.slice(-21).map((x) => x.volume).filter((x) => x);
+      if (v.length < 10) return `Le volume n'est pas disponible pour <b>${h.name}</b> chez notre fournisseur de données.`;
+      const last = v.at(-1), avg = v.slice(0, -1).reduce((a, b) => a + b, 0) / (v.length - 1);
+      return `Volume de la dernière bougie de <b>${h.name}</b> : ${Math.round(last / avg * 100)} % de la moyenne des 20 précédentes.`;
+    },
+  },
+
+  // ───────────── INDICES ─────────────
+  {
+    id: "indices-intro", module: "indices", title: "À quoi sert un indice ?", minutes: 4,
+    body: `
+<p>Un indice boursier résume l'évolution d'un panier d'actions. Il sert de thermomètre à un marché et de référence pour juger une performance.</p>
+<h3>Deux façons de pondérer</h3>
+<ul>
+<li><b>Par la capitalisation flottante</b> (CAC 40, S&P 500, DAX, Nasdaq) : les grandes entreprises pèsent plus. Seules les actions réellement échangeables comptent.</li>
+<li><b>Par le prix</b> (Dow Jones, Nikkei 225) : une action à 500 $ pèse plus qu'une action à 50 $, quelle que soit la taille de l'entreprise.</li>
+</ul>
+<h3>Indice de prix ou de rendement ?</h3>
+<p>La plupart des indices affichés (CAC 40, S&P 500) ignorent les dividendes. Le DAX est une exception : c'est un indice de performance qui les réinvestit, ce qui le favorise sur longue période.</p>
+<p>On ne peut pas acheter un indice directement. On passe par un ETF (tracker), un future, un CFD ou un produit à levier.</p>`,
+  },
+  {
+    id: "cac40", module: "indices", title: "CAC 40", minutes: 5, symbol: "^FCHI",
+    body: `
+<p>L'indice phare de la Bourse de Paris (Euronext Paris), créé fin 1987 avec une base de 1 000 points. Il regroupe 40 grandes valeurs choisies parmi les plus importantes et les plus échangées.</p>
+<ul>
+<li><b>Pondération</b> : capitalisation flottante, avec un plafond de 15 % par valeur.</li>
+<li><b>Horaires</b> : 9h00 à 17h30, heure de Paris.</li>
+<li><b>Révision</b> : la composition est revue chaque trimestre par un conseil scientifique.</li>
+<li><b>Profil</b> : très exposé au luxe, à l'énergie, à l'aéronautique, à la banque et à l'industrie. Une grande partie du chiffre d'affaires des sociétés est réalisée hors de France, notamment en Asie et aux États-Unis.</li>
+</ul>
+<h3>Ce qui le fait bouger</h3>
+<p>La politique de la BCE, la demande chinoise (pour le luxe), le prix du pétrole (pour l'énergie), la parité euro/dollar et l'ouverture de Wall Street à 15h30.</p>`,
+  },
+  {
+    id: "sp500", module: "indices", title: "S&P 500", minutes: 5, symbol: "^GSPC",
+    body: `
+<p>L'indice de référence mondial : environ 500 grandes entreprises américaines sélectionnées par un comité de S&P Dow Jones Indices. Elles pèsent une très grande part de la capitalisation boursière des États-Unis.</p>
+<ul>
+<li><b>Pondération</b> : capitalisation flottante, sans plafond. Les géants de la technologie y pèsent donc très lourd.</li>
+<li><b>Horaires</b> : 9h30 à 16h00 à New York, soit 15h30 à 22h00 à Paris (avec un décalage d'une heure quelques semaines par an lors des changements d'heure).</li>
+<li><b>Critères d'entrée</b> : taille, liquidité et bénéfices positifs.</li>
+</ul>
+<h3>Ce qui le fait bouger</h3>
+<p>Les décisions de la Fed, l'inflation (CPI), l'emploi (rapport mensuel), les résultats trimestriels des grandes sociétés et les taux à 10 ans.</p>`,
+  },
+  {
+    id: "nasdaq", module: "indices", title: "Nasdaq Composite et Nasdaq-100", minutes: 5, symbol: "^IXIC",
+    body: `
+<p>Le Nasdaq est d'abord une bourse électronique américaine, très tournée vers la technologie. Deux indices en portent le nom :</p>
+<ul>
+<li><b>Nasdaq Composite</b> : toutes les actions cotées sur le Nasdaq, soit plusieurs milliers. Base 100 en 1971.</li>
+<li><b>Nasdaq-100</b> : les 100 plus grandes sociétés non financières du Nasdaq. C'est celui que suivent la plupart des ETF et futures (le « NQ »).</li>
+</ul>
+<p><b>Profil</b> : technologie, semi-conducteurs, internet, biotechnologies. Plus volatil que le S&P 500. Il réagit fortement aux taux d'intérêt, car la valeur des entreprises de croissance repose sur des bénéfices futurs que des taux élevés déprécient.</p>`,
+  },
+  {
+    id: "dow", module: "indices", title: "Dow Jones Industrial Average", minutes: 4, symbol: "^DJI",
+    body: `
+<p>Le plus ancien indice américain encore calculé (1896). Il ne compte que 30 grandes entreprises.</p>
+<ul>
+<li><b>Pondération par le prix</b> : une action chère pèse plus, quelle que soit la taille de la société. C'est une méthode critiquée, mais l'indice reste très médiatisé.</li>
+<li>Il représente surtout les grandes valeurs « historiques » de l'économie américaine.</li>
+</ul>
+<p>Pour juger le marché américain, le S&P 500 est plus représentatif. Le Dow reste utile pour comparer valeurs défensives et valeurs technologiques.</p>`,
+  },
+  {
+    id: "dax", module: "indices", title: "DAX", minutes: 4, symbol: "^GDAXI",
+    body: `
+<p>L'indice vedette de la Bourse de Francfort. Il est passé de 30 à <b>40 valeurs</b> en septembre 2021.</p>
+<ul>
+<li><b>Indice de performance</b> : les dividendes sont réinvestis dans le calcul, contrairement au CAC 40.</li>
+<li><b>Horaires</b> (Xetra) : 9h00 à 17h30.</li>
+<li><b>Profil</b> : industrie, automobile, chimie, assurance, logiciels. Très sensible au commerce mondial et à la conjoncture chinoise.</li>
+</ul>`,
+  },
+  {
+    id: "stoxx50", module: "indices", title: "Euro Stoxx 50", minutes: 4, symbol: "^STOXX50E",
+    body: `
+<p>Les 50 plus grandes capitalisations de la zone euro, toutes places confondues (Paris, Francfort, Amsterdam, Madrid, Milan…). C'est la référence pour investir sur l'ensemble de la zone euro. La France et l'Allemagne y pèsent le plus.</p>
+<p>Il réagit fortement aux décisions de la BCE et aux écarts de taux entre pays de la zone euro.</p>`,
+  },
+  {
+    id: "autres", module: "indices", title: "FTSE 100 et Nikkei 225", minutes: 4, symbol: "^N225",
+    body: `
+<dl>
+<dt>FTSE 100 (Londres)</dt><dd>Les 100 plus grandes capitalisations britanniques. Très exposé aux matières premières, à l'énergie, à la pharmacie et aux banques. Il monte souvent quand la livre baisse, car beaucoup de sociétés réalisent leurs revenus en dollars.</dd>
+<dt>Nikkei 225 (Tokyo)</dt><dd>225 valeurs japonaises, pondérées par le prix comme le Dow Jones. Très sensible au yen : un yen faible favorise les exportateurs. Il cote pendant la nuit européenne et donne souvent le ton de l'ouverture à Paris.</dd>
+</dl>`,
+  },
+];
+
+return { MODULES, LESSONS };
+})();
+(() => {
+
+const $ = (id) => document.getElementById(id);
+const LW = window.LightweightCharts;
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+
+/* ───────── Actifs suivis ───────── */
+const WATCH = [
+  { group: "Indices", items: [
+    ["^FCHI", "CAC 40"], ["^STOXX50E", "Euro Stoxx 50"], ["^GDAXI", "DAX"], ["^FTSE", "FTSE 100"],
+    ["^GSPC", "S&P 500"], ["^IXIC", "Nasdaq Composite"], ["^NDX", "Nasdaq 100"], ["^DJI", "Dow Jones"], ["^N225", "Nikkei 225"]] },
+  { group: "Actions Paris", items: [["MC.PA", "LVMH"], ["TTE.PA", "TotalEnergies"], ["AIR.PA", "Airbus"], ["BNP.PA", "BNP Paribas"], ["OR.PA", "L'Oréal"]] },
+  { group: "Actions US", items: [["AAPL", "Apple"], ["NVDA", "Nvidia"], ["MSFT", "Microsoft"], ["TSLA", "Tesla"], ["AMZN", "Amazon"]] },
+  { group: "Crypto", items: [["BTC-USD", "Bitcoin"], ["ETH-USD", "Ethereum"], ["SOL-USD", "Solana"]] },
+  { group: "Forex", items: [["EURUSD=X", "EUR/USD"], ["GBPUSD=X", "GBP/USD"], ["USDJPY=X", "USD/JPY"]] },
+  { group: "Matières premières", items: [["GC=F", "Or"], ["SI=F", "Argent"], ["BZ=F", "Pétrole Brent"], ["CL=F", "Pétrole WTI"]] },
+];
+const KNOWN = new Map(WATCH.flatMap((g) => g.items));
+const TICKER = ["^FCHI", "^GDAXI", "^STOXX50E", "^GSPC", "^IXIC", "^DJI", "BTC-USD", "EURUSD=X", "GC=F", "BZ=F"];
+const TF_LABEL = { "15m": "15 minutes", "1h": "1 heure", "1d": "1 jour", "1wk": "1 semaine" };
+const LIVE_MS = 10000;
+
+const state = {
+  symbol: store.get("sdm.symbol", "^FCHI"),
+  name: "",
+  tf: store.get("sdm.tf", "1d"),
+  overlays: new Set(store.get("sdm.overlays", ["mm", "levels"])),
+  data: null, A: null, quotes: new Map(), assetNews: [], allNews: null, config: {},
+};
+
+/* ───────── Formats ───────── */
+const dec = (v) => { const a = Math.abs(v); return a >= 1000 ? 2 : a >= 10 ? 2 : a >= 1 ? 4 : 6; };
+const fmt = (v) => v == null || !isFinite(v) ? "—" : v.toLocaleString("fr-FR", { minimumFractionDigits: dec(v), maximumFractionDigits: dec(v) });
+const pct = (v) => v == null || !isFinite(v) ? "—" : (v > 0 ? "+" : "") + (v * 100).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " %";
+const pctAbs = (v) => (v * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 }) + " %";
+const dir = (v) => v > 0 ? "up" : v < 0 ? "down" : "flat";
+const ago = (iso) => {
+  if (!iso) return "";
+  const m = Math.round((Date.now() - new Date(iso)) / 60000);
+  if (m < 1) return "à l'instant"; if (m < 60) return `il y a ${m} min`;
+  const h = Math.round(m / 60); if (h < 24) return `il y a ${h} h`;
+  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+};
+function el(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") e.className = v; else if (k === "style") e.style.cssText = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) e.append(k instanceof Node ? k : String(k));
+  return e;
+}
+const api = LOCAL;
+const displayName = () => KNOWN.get(state.symbol) || state.name || state.symbol;
+
+/* ───────── Navigation ───────── */
+function route() {
+  const h = location.hash.replace("#", ""); const view = h.startsWith("academie") ? "academie" : h; const sub = h.startsWith("academie-") ? h.slice(9) : undefined;
+  const v = ["marches", "actus", "academie"].includes(view) ? view : "marches";
+  for (const id of ["marches", "actus", "academie"]) $("view-" + id).hidden = id !== v;
+  document.querySelectorAll(".tabs a").forEach((a) => a.classList.toggle("on", a.dataset.view === v));
+  if (v === "marches") requestAnimationFrame(() => charts.forEach((c) => c.timeScale().applyOptions({})));
+  if (v === "actus") renderNews();
+  if (v === "academie") renderAcademy(sub);
+  window.scrollTo({ top: 0 });
+}
+window.addEventListener("hashchange", route);
+
+/* ───────── Bandeau et liste ───────── */
+function renderWatch() {
+  $("watchlist").replaceChildren(...WATCH.map((g) => el("div", { class: "wl-group" },
+    el("h3", null, g.group),
+    g.items.map(([s, n]) => {
+      const q = state.quotes.get(s);
+      const ch = q?.price != null && q?.previousClose ? q.price / q.previousClose - 1 : null;
+      return el("button", { class: "wl-item" + (s === state.symbol ? " on" : ""), onclick: () => loadSymbol(s) },
+        el("span", { class: "nm" }, n), el("span", { class: "v" }, q?.price != null ? fmt(q.price) : ""),
+        el("span", { class: "s" }, s), el("span", { class: "c " + dir(ch) }, ch != null ? pct(ch) : ""));
+    }))));
+}
+function renderTicker() {
+  $("ticker").replaceChildren(...TICKER.map((s) => {
+    const q = state.quotes.get(s);
+    const ch = q?.price != null && q?.previousClose ? q.price / q.previousClose - 1 : null;
+    return el("button", { class: "tk", onclick: () => { loadSymbol(s); location.hash = "marches"; } },
+      el("b", null, KNOWN.get(s) || s), el("span", { class: "mono" }, q?.price != null ? fmt(q.price) : "…"),
+      el("span", { class: "mono " + dir(ch) }, ch != null ? pct(ch) : ""));
+  }));
+}
+async function refreshQuotes() {
+  const all = [...new Set([...TICKER, ...WATCH.flatMap((g) => g.items.map((x) => x[0]))])];
+  const chunks = [all.slice(0, 20), all.slice(20)].filter((c) => c.length);
+  try {
+    const res = (await Promise.all(chunks.map((c) => api("/api/quotes?symbols=" + encodeURIComponent(c.join(",")))))).flat();
+    res.forEach((q) => q.price != null && state.quotes.set(q.symbol, q));
+  } catch {}
+  renderTicker(); renderWatch();
+}
+
+/* ───────── Recherche ───────── */
+let searchTimer;
+$("search").addEventListener("input", (e) => {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  if (q.length < 2) { $("search-res").hidden = true; return; }
+  searchTimer = setTimeout(async () => {
+    try {
+      const res = await api("/api/search?q=" + encodeURIComponent(q));
+      $("search-res").replaceChildren(...(res.length ? res.map((r) => el("button", { onclick: () => { $("search").value = ""; $("search-res").hidden = true; loadSymbol(r.symbol, r.name); location.hash = "marches"; } },
+        el("span", null, r.name), el("span", { class: "mono" }, r.symbol), el("small", null, [r.type, r.exchange].filter(Boolean).join(" · ")))) : [el("p", { class: "muted", style: "padding:8px 12px;margin:0" }, "Aucun résultat")]));
+      $("search-res").hidden = false;
+    } catch { $("search-res").hidden = true; }
+  }, 300);
+});
+document.addEventListener("click", (e) => { if (!e.target.closest(".search")) $("search-res").hidden = true; });
+
+/* ───────── Graphiques ───────── */
+let charts = [], S = {}, priceLines = [];
+const tok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function chartOpts(el, priceFmt) {
+  return {
+    autoSize: true, height: el.clientHeight,
+    layout: { background: { type: "solid", color: "transparent" }, textColor: tok("--muted"), fontFamily: "IBM Plex Mono, monospace", fontSize: 11 },
+    grid: { vertLines: { color: tok("--soft") }, horzLines: { color: tok("--soft") } },
+    rightPriceScale: { borderColor: tok("--line"), minimumWidth: 78 },
+    timeScale: { borderColor: tok("--line"), timeVisible: state.tf === "15m" || state.tf === "1h", rightOffset: 4 },
+    crosshair: { mode: 0 },
+    localization: { locale: "fr-FR", priceFormatter: priceFmt || fmt },
+  };
+}
+const line = (arr, b) => { const o = []; arr.forEach((v, i) => v != null && o.push({ time: b[i].time, value: v })); return o; };
+
+function buildCharts() {
+  charts.forEach((c) => c.remove()); charts = []; S = {}; priceLines = [];
+  if (!LW) { $("chart-err").hidden = false; $("chart-err").textContent = "La bibliothèque de graphiques n'a pas pu se charger."; return; }
+  const up = tok("--up"), down = tok("--down");
+  const cp = LW.createChart($("c-price"), chartOpts($("c-price")));
+  const thin = { lineWidth: 1, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false };
+  S.bbU = cp.addLineSeries({ ...thin, color: tok("--muted"), lineStyle: 2 });
+  S.bbL = cp.addLineSeries({ ...thin, color: tok("--muted"), lineStyle: 2 });
+  S.ssa = cp.addLineSeries({ ...thin, color: up });
+  S.ssb = cp.addLineSeries({ ...thin, color: down });
+  S.tenkan = cp.addLineSeries({ ...thin, color: tok("--tenkan"), lineWidth: 2 });
+  S.kijun = cp.addLineSeries({ ...thin, color: tok("--kijun"), lineWidth: 2 });
+  S.chikou = cp.addLineSeries({ ...thin, color: tok("--muted"), lineStyle: 1 });
+  S.m20 = cp.addLineSeries({ ...thin, color: tok("--ma20"), lineWidth: 2 });
+  S.m50 = cp.addLineSeries({ ...thin, color: tok("--ma50"), lineWidth: 2 });
+  S.m200 = cp.addLineSeries({ ...thin, color: tok("--ma200"), lineWidth: 2 });
+  S.candles = cp.addCandlestickSeries({ upColor: up, downColor: down, borderUpColor: up, borderDownColor: down, wickUpColor: up, wickDownColor: down });
+
+  const cr = LW.createChart($("c-rsi"), chartOpts($("c-rsi"), (p) => p.toFixed(0)));
+  S.rsi = cr.addLineSeries({ color: tok("--accent"), lineWidth: 2, priceLineVisible: false });
+  S.rsi.createPriceLine({ price: 70, color: down, lineWidth: 1, lineStyle: 2, axisLabelVisible: false });
+  S.rsi.createPriceLine({ price: 30, color: up, lineWidth: 1, lineStyle: 2, axisLabelVisible: false });
+
+  const cm = LW.createChart($("c-macd"), chartOpts($("c-macd"), (p) => p.toFixed(Math.abs(p) < 1 ? 4 : 2)));
+  S.hist = cm.addHistogramSeries({ priceLineVisible: false, lastValueVisible: false });
+  S.macd = cm.addLineSeries({ color: tok("--accent"), lineWidth: 2, priceLineVisible: false, lastValueVisible: false });
+  S.sig = cm.addLineSeries({ color: tok("--ma20"), lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+
+  charts = [cp, cr, cm];
+  let sync = false;
+  charts.forEach((c) => c.timeScale().subscribeVisibleLogicalRangeChange((r) => {
+    if (sync || !r) return; sync = true; charts.forEach((o) => o !== c && o.timeScale().setVisibleLogicalRange(r)); sync = false;
+  }));
+}
+
+function paintSeries(first) {
+  const A = state.A, b = A.b, on = state.overlays, up = tok("--up"), down = tok("--down");
+  if (first) S.candles.setData(b.map(({ time, open, high, low, close }) => ({ time, open, high, low, close })));
+  else S.candles.update((({ time, open, high, low, close }) => ({ time, open, high, low, close }))(b.at(-1)));
+  const set = (s, data, show) => s.setData(show ? data : []);
+  set(S.m20, line(A.m20, b), on.has("mm")); set(S.m50, line(A.m50, b), on.has("mm")); set(S.m200, line(A.m200, b), on.has("mm"));
+  set(S.bbU, line(A.bb.up, b), on.has("bollinger")); set(S.bbL, line(A.bb.lo, b), on.has("bollinger"));
+  set(S.tenkan, line(A.ich.tenkan, b), on.has("ichimoku")); set(S.kijun, line(A.ich.kijun, b), on.has("ichimoku"));
+  set(S.ssa, A.ich.ssa, on.has("ichimoku")); set(S.ssb, A.ich.ssb, on.has("ichimoku")); set(S.chikou, A.ich.chikou, on.has("ichimoku"));
+  S.rsi.setData(line(A.r, b));
+  S.hist.setData(A.md.hist.map((v, i) => v == null ? null : { time: b[i].time, value: v, color: v >= 0 ? up : down }).filter(Boolean));
+  S.macd.setData(line(A.md.m, b)); S.sig.setData(line(A.md.sig, b));
+
+  priceLines.forEach((p) => S.candles.removePriceLine(p)); priceLines = [];
+  if (on.has("levels")) {
+    A.res.forEach((x) => priceLines.push(S.candles.createPriceLine({ price: x.level, color: down, lineWidth: 1, lineStyle: 1, title: "R" })));
+    A.sup.forEach((x) => priceLines.push(S.candles.createPriceLine({ price: x.level, color: up, lineWidth: 1, lineStyle: 1, title: "S" })));
+  }
+  if (on.has("fibonacci")) {
+    A.fib.levels.forEach((l) => priceLines.push(S.candles.createPriceLine({ price: l.price, color: tok("--fib"), lineWidth: 1, lineStyle: l.ratio === 0 || l.ratio === 1 ? 0 : 2, title: "Fib " + (l.ratio * 100).toFixed(1).replace(".0", "") + "%" })));
+  }
+  S.lastTime = b.at(-1).time;
+  if (first) charts[0].timeScale().setVisibleLogicalRange({ from: Math.max(0, b.length - 160), to: b.length + 6 });
+
+  const leg = [];
+  if (on.has("mm")) leg.push(["--ma20", "MM20"], ["--ma50", "MM50"], ["--ma200", "MM200"]);
+  if (on.has("bollinger")) leg.push(["--muted", "Bollinger 20, 2σ"]);
+  if (on.has("ichimoku")) leg.push(["--tenkan", "Tenkan"], ["--kijun", "Kijun"], ["--up", "Span A"], ["--down", "Span B"], ["--muted", "Chikou"]);
+  if (on.has("fibonacci")) leg.push(["--fib", `Fibonacci (${A.fib.upMove ? "repli de la hausse" : "rebond de la baisse"} sur 120 bougies)`]);
+  $("legend").replaceChildren(...leg.map(([c, t]) => el("span", null, el("i", { style: `background:var(${c})` }), t)));
+}
+
+/* ───────── Panneaux d'analyse ───────── */
+function renderQuote(prevPrice) {
+  const m = state.data.meta, A = state.A;
+  const price = A.last;
+  const ref = m.previousClose && state.tf !== "1wk" ? m.previousClose : A.prev;
+  $("q-name").textContent = displayName();
+  $("q-sym").textContent = state.symbol;
+  $("q-px").textContent = fmt(price);
+  $("q-chg").textContent = `${pct(price / ref - 1)}  ${price - ref >= 0 ? "+" : ""}${fmt(price - ref)}`;
+  $("q-chg").className = "chg mono " + dir(price - ref);
+  const t = A.b.at(-1).time;
+  $("q-meta").textContent = [m.exchange, m.currency, "bougies " + TF_LABEL[state.tf], "maj " + new Date().toLocaleTimeString("fr-FR"), "dernière bougie " + new Date(t * 1000).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: state.tf === "1d" || state.tf === "1wk" ? undefined : "short" })].filter(Boolean).join(" · ");
+  if (prevPrice != null && prevPrice !== price) {
+    const px = $("q-px"); px.classList.remove("flash-up", "flash-down"); void px.offsetWidth;
+    px.classList.add(price > prevPrice ? "flash-up" : "flash-down");
+    setTimeout(() => px.classList.remove("flash-up", "flash-down"), 50);
+  }
+  document.title = `${displayName()} ${fmt(price)} · Salle des marchés`;
+}
+
+function renderPanels() {
+  const A = state.A;
+  $("perf").replaceChildren(...A.perf.map((p) => el("div", null, el("b", { class: p.v == null ? "" : dir(p.v) }, p.v == null ? "—" : pct(p.v / 100)), el("span", null, p.lbl))));
+  const [vt, vc] = TA.verdictOf(A.score);
+  $("verdict").textContent = vt; $("verdict").className = "verdict " + vc;
+  $("score-num").textContent = (A.score > 0 ? "+" : "") + A.score + " / 100";
+  $("needle").style.left = 50 + A.score / 2 + "%";
+  const sc = (s) => s > 0.2 ? "up" : s < -0.2 ? "down" : "flat";
+  $("rows").replaceChildren(...A.sig.map((s) => el("div", { class: "row" },
+    el("div", { class: "lbl" }, el("a", { href: "#academie-" + s.lesson, title: "Comprendre cet indicateur" }, s.label), el("small", null, s.detail)),
+    el("span", { class: "val" }, s.value), el("span", { class: "pill " + sc(s.s) }, s.txt))));
+  const lv = [];
+  [...A.res].reverse().forEach((x) => lv.push(el("div", { class: "lvl res" }, el("span", null, "R ", el("small", null, `${x.touches} contact${x.touches > 1 ? "s" : ""}`)), el("span", null, fmt(x.level), el("small", null, " " + pct(x.level / A.last - 1))))));
+  lv.push(el("div", { class: "lvl now" }, el("span", null, "Cours"), el("span", null, fmt(A.last))));
+  A.sup.forEach((x) => lv.push(el("div", { class: "lvl sup" }, el("span", null, "S ", el("small", null, `${x.touches} contact${x.touches > 1 ? "s" : ""}`)), el("span", null, fmt(x.level), el("small", null, " " + pct(x.level / A.last - 1))))));
+  lv.push(el("div", { class: "lvl" }, el("small", null, "ATR 14"), el("span", null, fmt(A.atrNow))));
+  lv.push(el("div", { class: "lvl" }, el("small", null, "Plus haut / bas 1 an"), el("span", null, `${fmt(A.hi52)} / ${fmt(A.lo52)}`)));
+  $("levels").replaceChildren(...lv);
+}
+
+/* ───────── Chargement et direct ───────── */
+let liveTimer = null, loadSeq = 0;
+async function loadSymbol(symbol, name) {
+  state.symbol = symbol; state.name = name || KNOWN.get(symbol) || "";
+  store.set("sdm.symbol", symbol);
+  renderWatch();
+  const seq = ++loadSeq;
+  $("chart-err").hidden = true; $("live-dot").classList.remove("on");
+  $("result").hidden = true; $("ai-status").textContent = "";
+  try {
+    const data = await api(`/api/chart?symbol=${encodeURIComponent(symbol)}&tf=${state.tf}`);
+    if (seq !== loadSeq) return;
+    if (data.bars.length < 30) throw new Error("Pas assez d'historique pour cet actif sur cette unité de temps.");
+    state.data = data;
+    if (!state.name) state.name = data.meta.name;
+    state.A = TA.analyse(data.bars, state.tf);
+    buildCharts(); paintSeries(true); renderQuote(); renderPanels();
+    $("live-dot").classList.add("on");
+    loadAssetNews();
+    refreshLesson();
+  } catch (e) {
+    if (seq !== loadSeq) return;
+    $("chart-err").hidden = false; $("chart-err").textContent = "Impossible de charger " + symbol + " : " + e.message;
+  }
+  clearInterval(liveTimer);
+  liveTimer = setInterval(liveTick, LIVE_MS);
+}
+
+async function liveTick() {
+  if (document.hidden || !state.data) return;
+  const seq = loadSeq;
+  try {
+    const live = await api(`/api/live?symbol=${encodeURIComponent(state.symbol)}&tf=${state.tf}`);
+    if (seq !== loadSeq || !live.bars.length) return;
+    const bars = state.data.bars;
+    const prevPrice = state.A.last;
+    for (const nb of live.bars) {
+      const last = bars.at(-1);
+      if (nb.time === last.time) bars[bars.length - 1] = nb;
+      else if (nb.time > last.time) bars.push(nb);
+    }
+    if (live.meta?.previousClose) state.data.meta.previousClose = live.meta.previousClose;
+    state.A = TA.analyse(bars, state.tf);
+    const appended = live.bars.filter((nb) => nb.time > S.lastTime).length > 1;
+    if (appended) S.candles.setData(bars.map(({ time, open, high, low, close }) => ({ time, open, high, low, close })));
+    paintSeries(false);
+    renderQuote(prevPrice); renderPanels(); refreshLesson(true);
+    $("live-dot").classList.add("on");
+  } catch {
+    $("live-dot").classList.remove("on");
+  }
+}
+
+$("tf").addEventListener("click", (e) => {
+  const tf = e.target.closest("button")?.dataset.tf; if (!tf) return;
+  state.tf = tf; store.set("sdm.tf", tf);
+  $("tf").querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.tf === tf));
+  loadSymbol(state.symbol, state.name);
+});
+function setOverlay(ov, on) {
+  on ? state.overlays.add(ov) : state.overlays.delete(ov);
+  store.set("sdm.overlays", [...state.overlays]);
+  $("overlays").querySelectorAll("button").forEach((b) => b.classList.toggle("on", state.overlays.has(b.dataset.ov)));
+  if (state.A && S.candles) paintSeries(false);
+}
+$("overlays").addEventListener("click", (e) => {
+  const ov = e.target.closest("button")?.dataset.ov; if (!ov) return;
+  setOverlay(ov, !state.overlays.has(ov));
+});
+
+/* ───────── Actualités ───────── */
+const newsItem = (n) => el("li", null,
+  el("a", { href: n.link, target: "_blank", rel: "noopener noreferrer" }, n.title),
+  el("span", { class: "meta" }, el("span", { class: "src" }, n.source), el("span", null, ago(n.date))));
+
+async function loadAssetNews() {
+  const name = displayName();
+  $("asset-news").replaceChildren(el("li", { class: "muted" }, "Chargement…"));
+  try {
+    const r = await api("/api/news/asset?q=" + encodeURIComponent(name));
+    state.assetNews = r.items || [];
+  } catch { state.assetNews = []; }
+  const list = state.assetNews.slice(0, 8);
+  $("asset-news").replaceChildren(...(list.length ? list.map(newsItem) : [el("li", { class: "muted" }, "Aucune actu récente trouvée pour " + name + ".")]));
+  $("news-asset-title").textContent = "Sur " + name;
+  $("news-asset").replaceChildren(...(state.assetNews.length ? state.assetNews.slice(0, 20).map(newsItem) : [el("li", { class: "muted" }, "Aucune actu récente.")]));
+}
+
+let newsSource = "all";
+async function loadNews() {
+  try { state.allNews = await api("/api/news"); } catch (e) { state.allNews = { items: [], status: [], error: e.message }; }
+  if (!$("view-actus").hidden) renderNews();
+}
+function renderNews() {
+  const d = state.allNews;
+  if (!d) { loadNews(); return; }
+  $("news-sources").replaceChildren(
+    el("button", { class: "chip" + (newsSource === "all" ? " on" : ""), onclick: () => { newsSource = "all"; renderNews(); } }, "Toutes les sources"),
+    ...d.status.map((s) => el("button", { class: "chip" + (newsSource === s.id ? " on" : ""), title: s.ok ? `${s.count} titres` : "Source indisponible pour le moment", onclick: () => { newsSource = s.id; renderNews(); } },
+      el("span", { class: "dot" + (s.ok ? "" : " ko") }), s.label)));
+  const f = $("news-filter").value.trim().toLowerCase();
+  const items = d.items.filter((n) => (newsSource === "all" || n.sourceId === newsSource) && (!f || n.title.toLowerCase().includes(f))).slice(0, 120);
+  $("news-list").replaceChildren(...(items.length ? items.map(newsItem) : [el("li", { class: "muted" }, d.error ? "Actualités indisponibles : " + d.error : "Aucun titre ne correspond.")]));
+}
+$("news-filter").addEventListener("input", renderNews);
+
+/* ───────── Analyse IA ───────── */
+function technicalSummary() {
+  const A = state.A, b = A.b, n = A.n;
+  const recent = b.slice(-30).map((x) => `${new Date(x.time * 1000).toISOString().slice(0, state.tf === "1d" || state.tf === "1wk" ? 10 : 16)};${fmt(x.open)};${fmt(x.high)};${fmt(x.low)};${fmt(x.close)}`).join("\n");
+  return `Dernier cours : ${fmt(A.last)} ${state.data.meta.currency || ""}
+MM20 ${fmt(A.m20[n])} · MM50 ${fmt(A.m50[n])} · MM200 ${fmt(A.m200[n])}
+RSI14 ${A.r[n]?.toFixed(1) ?? "—"} · Stochastique %K ${A.st.k[n]?.toFixed(0) ?? "—"} · ATR14 ${fmt(A.atrNow)}
+Ichimoku : Tenkan ${fmt(A.ich.tenkan[n])}, Kijun ${fmt(A.ich.kijun[n])}, nuage actuel ${fmt(A.ich.cloudNow.a)} / ${fmt(A.ich.cloudNow.b)}, nuage projeté ${fmt(A.ich.cloudFuture.a)} / ${fmt(A.ich.cloudFuture.b)}
+Fibonacci (${A.fib.upMove ? "repli de la hausse" : "rebond de la baisse"} ${fmt(A.fib.lo)} → ${fmt(A.fib.hi)}) : ${A.fib.levels.map((l) => (l.ratio * 100).toFixed(1) + "% " + fmt(l.price)).join(", ")}
+Plus haut / bas sur 1 an : ${fmt(A.hi52)} / ${fmt(A.lo52)}
+Performances : ${A.perf.map((p) => p.lbl + " " + (p.v == null ? "—" : pct(p.v / 100))).join(" · ")}
+Score technique synthétique : ${A.score}/100 (${TA.verdictOf(A.score)[0]})
+Signaux :
+${A.sig.map((s) => `- ${s.label} : ${s.value} → ${s.txt} (${s.detail})`).join("\n")}
+Résistances : ${A.res.map((x) => `${fmt(x.level)} (${x.touches} contacts)`).join(", ") || "aucune proche"}
+Supports : ${A.sup.map((x) => `${fmt(x.level)} (${x.touches} contacts)`).join(", ") || "aucun proche"}
+30 dernières bougies (date;ouverture;haut;bas;clôture) :
+${recent}`;
+}
+
+let aiBusy = false;
+$("go").addEventListener("click", async () => {
+  if (aiBusy || !state.A) return;
+  aiBusy = true; $("go").disabled = true;
+  $("ai-status").className = "status"; $("ai-status").textContent = "Claude analyse le graphique et les actus… (souvent 20 à 60 secondes)";
+  const general = (state.allNews?.items || []).slice(0, 12);
+  const news = [...state.assetNews.slice(0, 13), ...general].map(({ title, source, date }) => ({ title, source, date }));
+  try {
+    const data = await api("/api/analyse", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ symbol: state.symbol, name: displayName(), timeframe: TF_LABEL[state.tf], horizon: $("horizon").value, profil: $("profil").value, depth: $("depth").value, notes: $("notes").value, technical: technicalSummary(), news }),
+    });
+    showResult(data);
+    $("ai-status").textContent = "Analyse générée à " + new Date().toLocaleTimeString("fr-FR") + " sur le cours de " + fmt(state.A.last) + ".";
+  } catch (e) {
+    $("ai-status").className = "status err"; $("ai-status").textContent = e.message;
+  } finally { aiBusy = false; $("go").disabled = !state.config.ai; }
+});
+
+function showResult(d) {
+  const R = $("result"); R.replaceChildren();
+  const bias = String(d.biais || "neutre").toLowerCase();
+  const bc = bias.startsWith("haus") ? "up" : bias.startsWith("bais") ? "down" : "flat";
+  R.append(el("div", { class: "res-head" }, el("span", { class: "verdict " + bc }, bias[0].toUpperCase() + bias.slice(1)), el("span", { class: "mono muted" }, `confiance ${Math.round(+d.confiance || 0)} / 100`)));
+  if (d.resume) R.append(el("p", { class: "summary" }, d.resume));
+  if (Array.isArray(d.scenarios)) R.append(el("div", { class: "scen" }, d.scenarios.slice(0, 3).map((s) => {
+    const nm = String(s.nom || ""), c = /haus/i.test(nm) ? "--up" : /bais/i.test(nm) ? "--down" : "--warn";
+    const p = Math.max(0, Math.min(100, +s.probabilite || 0));
+    const obj = s.objectif != null && isFinite(+s.objectif) ? +s.objectif : null;
+    return el("div", { class: "sc" }, el("div", { class: "sc-top" }, el("b", null, nm), el("span", null, p + " %")),
+      el("div", { class: "bar-p" }, el("i", { style: `width:${p}%;background:var(${c})` })),
+      obj != null ? el("div", { class: "mono small muted" }, `Objectif ${fmt(obj)} (${pct(obj / state.A.last - 1)})`) : null,
+      s.declencheur ? el("p", null, el("b", null, "Déclencheur : "), s.declencheur) : null,
+      s.description ? el("p", { class: "muted" }, s.description) : null);
+  })));
+  const list = (t, a) => Array.isArray(a) && a.length ? el("div", null, el("div", { class: "eyebrow" }, t), el("ul", null, a.map((x) => el("li", null, String(x))))) : null;
+  R.append(el("div", { class: "cols" }, list("Lecture technique", d.lecture_technique), list("Lecture de l'actualité", d.lecture_actus)));
+  const nv = d.niveaux || {}, p = d.plan || {};
+  const rows = [["Supports", (nv.supports || []).map((x) => fmt(+x)).join(" · ")], ["Résistances", (nv.resistances || []).map((x) => fmt(+x)).join(" · ")], ["Invalidation", nv.invalidation != null ? fmt(+nv.invalidation) : ""], ["Approche", p.approche], ["Entrée", p.entree], ["Stop", p.stop], ["Objectifs", p.objectifs], ["Gain / risque", p.ratio]].filter(([, v]) => v);
+  if (rows.length) R.append(el("div", { class: "plan" }, el("div", { class: "eyebrow" }, "Niveaux et plan indicatif"), el("dl", null, rows.flatMap(([k, v]) => [el("dt", null, k), el("dd", null, String(v))]))));
+  R.append(el("div", { class: "cols" }, list("Risques", d.risques), list("À surveiller", d.a_surveiller)));
+  R.hidden = false;
+}
+
+/* ───────── Académie ───────── */
+let currentLesson = null;
+const helpers = () => ({ name: displayName(), fmt, pct, pctAbs, tfLabel: TF_LABEL[state.tf].toLowerCase() });
+function renderAcademy(id) {
+  const lesson = LESSONS.find((l) => l.id === id) || currentLesson || LESSONS[0];
+  currentLesson = lesson;
+  $("lessons").replaceChildren(...MODULES.map((m) => el("div", null, el("h3", null, m.title),
+    LESSONS.filter((l) => l.module === m.id).map((l) => el("a", { href: "#academie-" + l.id, class: l.id === lesson.id ? "on" : "" }, l.title, el("span", null, l.minutes + " min"))))));
+  const idx = LESSONS.indexOf(lesson), prev = LESSONS[idx - 1], next = LESSONS[idx + 1];
+  const mod = MODULES.find((m) => m.id === lesson.module);
+  const body = el("div"); body.innerHTML = lesson.body; // contenu statique écrit dans academy.js
+  const actions = el("div", { class: "lesson-actions" },
+    lesson.overlay ? el("button", { class: "primary", onclick: () => { setOverlay(lesson.overlay, true); location.hash = "marches"; } }, "Afficher sur le graphique de " + displayName()) : null,
+    lesson.symbol ? el("button", { class: "primary", onclick: () => { loadSymbol(lesson.symbol); location.hash = "marches"; } }, "Ouvrir le graphique de " + (KNOWN.get(lesson.symbol) || lesson.symbol)) : null);
+  $("lesson").replaceChildren(
+    el("div", { class: "eyebrow" }, mod.title + " · " + lesson.minutes + " min"),
+    el("h1", null, lesson.title),
+    el("div", { id: "livebox" }),
+    body,
+    lesson.calculator ? calculator() : null,
+    actions.childElementCount ? actions : null,
+    el("div", { class: "lesson-nav" },
+      prev ? el("a", { href: "#academie-" + prev.id }, "← " + prev.title) : el("span"),
+      next ? el("a", { href: "#academie-" + next.id }, next.title + " →") : el("span")));
+  refreshLesson();
+}
+function refreshLesson() {
+  const box = document.getElementById("livebox");
+  if (!box || !currentLesson) return;
+  const L = currentLesson;
+  let html = null;
+  if (L.symbol && state.quotes.get(L.symbol)) {
+    const q = state.quotes.get(L.symbol);
+    html = `<b>${KNOWN.get(L.symbol)}</b> cote <b>${fmt(q.price)}</b> (${pct(q.price / q.previousClose - 1)} sur la séance).`;
+  } else if (L.live && state.A) {
+    try { html = L.live(state.A, helpers()); } catch { html = null; }
+  }
+  if (!html) { box.replaceChildren(); box.className = ""; return; }
+  box.className = "livebox";
+  box.innerHTML = `<div class="eyebrow"><span class="live-dot on"></span>En ce moment, sur ${L.symbol ? "le marché" : "l'actif suivi"}</div><p>${html}</p>`;
+}
+function calculator() {
+  const wrap = el("div", { class: "calc" });
+  const f = (id, label, val) => el("label", null, label, el("input", { id, type: "number", value: val, step: "any", min: "0" }));
+  const last = state.A?.last ? +state.A.last.toPrecision(5) : 50;
+  const stop = state.A?.atrNow ? +(state.A.last - 2 * state.A.atrNow).toPrecision(5) : 48;
+  wrap.append(f("k-cap", "Capital (€)", 10000), f("k-risk", "Risque par trade (%)", 1), f("k-in", "Prix d'entrée", last), f("k-stop", "Stop", stop), f("k-tp", "Objectif", +(last + (last - stop) * 2).toPrecision(5)), el("p", { class: "calc-out", id: "k-out" }));
+  const calc = () => {
+    const v = (id) => parseFloat(wrap.querySelector("#" + id).value);
+    const cap = v("k-cap"), r = v("k-risk") / 100, e = v("k-in"), s = v("k-stop"), t = v("k-tp");
+    const per = Math.abs(e - s), out = wrap.querySelector("#k-out");
+    if (!(cap > 0 && r > 0 && e > 0 && per > 0)) { out.textContent = "Renseigne un capital, un risque et un stop différent du prix d'entrée."; return; }
+    const qty = cap * r / per, rr = t > 0 ? Math.abs(t - e) / per : null;
+    out.innerHTML = `Risque accepté : <b>${fmt(cap * r)} €</b> · Taille : <b>${qty >= 10 ? Math.floor(qty) : qty.toFixed(4).replace(".", ",")} unités</b> · Position : <b>${fmt(qty * e)} €</b> (${Math.round(qty * e / cap * 100)} % du capital)${rr ? ` · Gain/risque : <b>${rr.toFixed(2).replace(".", ",")}</b>` : ""}`;
+  };
+  wrap.addEventListener("input", calc); setTimeout(calc);
+  return wrap;
+}
+
+/* ───────── Démarrage ───────── */
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => { if (state.A) { buildCharts(); paintSeries(true); } });
+$("tf").querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.tf === state.tf));
+$("overlays").querySelectorAll("button").forEach((b) => b.classList.toggle("on", state.overlays.has(b.dataset.ov)));
+
+(async () => {
+  try { state.config = await api("/api/config"); } catch { state.config = {}; }
+  $("mock-banner").hidden = !state.config.mock;
+  $("ai-state").textContent = state.config.ai ? "IA active" : "IA non configurée";
+  $("ai-state").className = "badge " + (state.config.ai ? "ok" : "ko");
+  $("go").disabled = !state.config.ai;
+  if (!state.config.ai) $("ai-status").textContent = "Pour activer l'analyse, l'administrateur du site doit ajouter une clé API Anthropic (variable ANTHROPIC_API_KEY).";
+  renderTicker(); renderWatch();
+  route();
+  loadSymbol(state.symbol);
+  refreshQuotes(); setInterval(refreshQuotes, 20000);
+  loadNews(); setInterval(loadNews, 5 * 60 * 1000);
+})();
+
+})();
+</script>
+
+</body>
+</html>
