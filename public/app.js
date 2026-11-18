@@ -1,8 +1,13 @@
 import * as TA from "./indicators.js";
 import { MODULES, LESSONS } from "./academy.js";
-import { $, store, fmt, pct, pctAbs, dir, ago, el, api, connectLive, onLive, toast } from "./util.js";
-import { WATCH, KNOWN, TICKER, assetClass } from "./universe.js";
-import * as Monde from "./monde.js";
+import { $, store, fmt, pct, pctAbs, dir, ago, el, api, connectLive, onLive } from "./util.js";
+import { KNOWN, TICKER, assetClass } from "./universe.js";
+import * as Browser from "./browser.js";
+import * as Calendar from "./calendar.js";
+import * as Journal from "./journal.js";
+import * as Notify from "./notify.js";
+import { burst } from "./fx.js";
+import { assetVisual, topicOf, topicVisual, TOPICS } from "./visuals.js";
 import * as Predictions from "./predictions.js";
 import * as Entreprise from "./entreprise.js";
 
@@ -21,14 +26,15 @@ const state = {
 const displayName = () => KNOWN.get(state.symbol) || state.name || state.symbol;
 
 /* ───────── Navigation ───────── */
-const VIEWS = ["marches", "monde", "predictions", "entreprise", "actus", "academie"];
+const VIEWS = ["marches", "predictions", "entreprise", "calendrier", "actus", "journal", "academie"];
 function route() {
   const [view, sub] = location.hash.replace("#", "").split("/");
   const v = VIEWS.includes(view) ? view : "marches";
   for (const id of VIEWS) $("view-" + id).hidden = id !== v;
   document.querySelectorAll(".tabs a").forEach((a) => a.classList.toggle("on", a.dataset.view === v));
   if (v === "marches") requestAnimationFrame(() => charts.forEach((c) => c.timeScale().applyOptions({})));
-  Monde.setVisible(v === "monde");
+  if (v === "calendrier") Calendar.show();
+  if (v === "journal") Journal.show();
   if (v === "predictions") Predictions.show();
   if (v === "entreprise") Entreprise.show(sub ? decodeURIComponent(sub) : state.symbol);
   if (v === "actus") renderNews();
@@ -39,23 +45,18 @@ function route() {
 const ctx = {
   open(symbol, name) { loadSymbol(symbol, name); location.hash = "marches"; },
   company(symbol) { location.hash = "entreprise/" + encodeURIComponent(symbol); },
+  // Depuis les cartes de la page Marchés : on reste sur la page et on remonte jusqu'au graphique.
+  select(symbol, name) { loadSymbol(symbol, name); $("quote-box").scrollIntoView({ behavior: "smooth", block: "start" }); },
   currentSymbol: () => state.symbol,
+  currentPrice: () => state.A?.last,
   config: () => state.config,
+  onQuotes(map) { for (const [s, q] of map) Notify.checkAlerts(s, q.price); },
 };
+let browserReady = false;
 window.addEventListener("hashchange", route);
 
 /* ───────── Bandeau et liste ───────── */
-function renderWatch() {
-  $("watchlist").replaceChildren(...WATCH.map((g) => el("div", { class: "wl-group" },
-    el("h3", null, g.group),
-    g.items.map(([s, n]) => {
-      const q = state.quotes.get(s);
-      const ch = q?.price != null && q?.previousClose ? q.price / q.previousClose - 1 : null;
-      return el("button", { class: "wl-item" + (s === state.symbol ? " on" : ""), onclick: () => loadSymbol(s) },
-        el("span", { class: "nm" }, n), el("span", { class: "v" }, q?.price != null ? fmt(q.price) : ""),
-        el("span", { class: "s" }, s), el("span", { class: "c " + dir(ch) }, ch != null ? pct(ch) : ""));
-    }))));
-}
+function renderWatch() { if (browserReady) Browser.showFamilyOf(state.symbol); }
 function renderTicker() {
   $("ticker").replaceChildren(...TICKER.map((s) => {
     const q = state.quotes.get(s);
@@ -66,13 +67,13 @@ function renderTicker() {
   }));
 }
 async function refreshQuotes() {
-  const all = [...new Set([...TICKER, ...WATCH.flatMap((g) => g.items.map((x) => x[0]))])];
+  const all = [...new Set([...TICKER, ...Notify.alertSymbols()])];
   const chunks = [all.slice(0, 20), all.slice(20)].filter((c) => c.length);
   try {
     const res = (await Promise.all(chunks.map((c) => api("/api/quotes?symbols=" + encodeURIComponent(c.join(",")))))).flat();
-    res.forEach((q) => q.price != null && state.quotes.set(q.symbol, q));
+    res.forEach((q) => { if (q.price != null) { state.quotes.set(q.symbol, q); Notify.checkAlerts(q.symbol, q.price); } });
   } catch {}
-  renderTicker(); renderWatch();
+  renderTicker();
 }
 
 /* ───────── Recherche ───────── */
@@ -98,7 +99,7 @@ const tok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n
 function chartOpts(el, priceFmt) {
   return {
     autoSize: true, height: el.clientHeight,
-    layout: { background: { type: "solid", color: "transparent" }, textColor: tok("--muted"), fontFamily: "IBM Plex Mono, monospace", fontSize: 11 },
+    layout: { background: { type: "solid", color: "transparent" }, textColor: tok("--muted"), fontFamily: "JetBrains Mono, monospace", fontSize: 11 },
     grid: { vertLines: { color: tok("--soft") }, horzLines: { color: tok("--soft") } },
     rightPriceScale: { borderColor: tok("--line"), minimumWidth: 78 },
     timeScale: { borderColor: tok("--line"), timeVisible: state.tf === "15m" || state.tf === "1h", rightOffset: 4 },
@@ -181,11 +182,14 @@ function renderQuote(prevPrice) {
   const price = A.last;
   const ref = m.previousClose && state.tf !== "1wk" ? m.previousClose : A.prev;
   $("q-name").textContent = displayName();
+  if ($("q-visual").dataset.s !== state.symbol) { $("q-visual").replaceChildren(assetVisual(state.symbol, displayName(), 48)); $("q-visual").dataset.s = state.symbol; }
   $("q-sym").textContent = state.symbol;
   $("q-company").hidden = assetClass(state.symbol) !== "action";
   $("q-px").textContent = fmt(price);
   $("q-chg").textContent = `${pct(price / ref - 1)}  ${price - ref >= 0 ? "+" : ""}${fmt(price - ref)}`;
-  $("q-chg").className = "chg mono " + dir(price - ref);
+  $("q-chg").className = "chip big " + dir(price - ref);
+  celebrate(price, prevPrice, price / ref - 1);
+  Notify.checkAlerts(state.symbol, price, $("q-px"));
   const t = A.b.at(-1).time;
   $("q-meta").textContent = [m.exchange, m.currency, "bougies " + TF_LABEL[state.tf], "maj " + new Date().toLocaleTimeString("fr-FR"), "dernière bougie " + new Date(t * 1000).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: state.tf === "1d" || state.tf === "1wk" ? undefined : "short" })].filter(Boolean).join(" · ");
   if (prevPrice != null && prevPrice !== price) {
@@ -194,6 +198,19 @@ function renderQuote(prevPrice) {
     setTimeout(() => px.classList.remove("flash-up", "flash-down"), 50);
   }
   document.title = `${displayName()} ${fmt(price)} · Salle des marchés`;
+}
+
+// Animations : petite gerbe à chaque mouvement du prix, grande à chaque palier de ±1 % sur la séance.
+let lastStep = null;
+function celebrate(price, prevPrice, change) {
+  if (prevPrice == null) { lastStep = Math.trunc(change * 100); return; }
+  if (price !== prevPrice) burst(price > prevPrice ? "gain" : "loss", { anchor: $("q-px"), text: (price > prevPrice ? "+" : "") + pct(price / prevPrice - 1) });
+  const step = Math.trunc(change * 100);
+  if (lastStep != null && step !== lastStep && step !== 0) {
+    burst(step > lastStep ? "gain" : "loss", { anchor: $("q-px"), size: "big", text: pct(change) });
+    Notify.notify({ title: `${displayName()} ${step > lastStep ? "franchit" : "repasse sous"} ${step > 0 ? "+" : ""}${step} %`, body: `Variation du jour : ${pct(change)} · cours ${fmt(price)}`, kind: step > lastStep ? "gain" : "loss", symbol: state.symbol, browser: true });
+  }
+  lastStep = step;
 }
 
 function renderPanels() {
@@ -219,6 +236,7 @@ function renderPanels() {
 /* ───────── Chargement et direct ───────── */
 let liveTimer = null, loadSeq = 0;
 async function loadSymbol(symbol, name) {
+  lastStep = null;
   state.symbol = symbol; state.name = name || KNOWN.get(symbol) || "";
   store.set("sdm.symbol", symbol);
   renderWatch();
@@ -270,6 +288,15 @@ async function liveTick() {
 }
 
 $("q-company").addEventListener("click", () => ctx.company(state.symbol));
+$("q-alert").addEventListener("click", () => state.A && Notify.alertForm({ symbol: state.symbol, name: displayName(), price: state.A.last }));
+$("q-trade").addEventListener("click", () => { location.hash = "journal"; });
+
+async function renderMiniCal() {
+  const evs = await Calendar.upcoming(4);
+  $("mini-cal").replaceChildren(...(evs.length ? evs.map((e) => el("li", null,
+    el("time", null, new Date(e.date).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" }), el("br"), new Date(e.date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })),
+    el("span", null, e.impact === "fort" ? el("span", { class: "hi" }, "● ") : null, e.title))) : [el("li", { class: "muted" }, "Aucun événement majeur à venir.")]));
+}
 $("tf").addEventListener("click", (e) => {
   const tf = e.target.closest("button")?.dataset.tf; if (!tf) return;
   state.tf = tf; store.set("sdm.tf", tf);
@@ -288,9 +315,10 @@ $("overlays").addEventListener("click", (e) => {
 });
 
 /* ───────── Actualités ───────── */
-const newsItem = (n) => el("li", null,
-  el("a", { href: n.link, target: "_blank", rel: "noopener noreferrer" }, n.title),
-  el("span", { class: "meta" }, el("span", { class: "src" }, n.source), el("span", null, ago(n.date))));
+const newsItem = (n, size = 36) => { const t = topicOf(n.title); return el("li", null, topicVisual(t, size),
+  el("div", null,
+    el("a", { href: n.link, target: "_blank", rel: "noopener noreferrer" }, n.title),
+    el("span", { class: "meta" }, el("span", { class: "src" }, n.source), el("span", null, ago(n.date)), size > 40 ? el("span", { class: "topic" }, t.label) : null))); };
 
 async function loadAssetNews() {
   const name = displayName();
@@ -300,12 +328,12 @@ async function loadAssetNews() {
     state.assetNews = r.items || [];
   } catch { state.assetNews = []; }
   const list = state.assetNews.slice(0, 8);
-  $("asset-news").replaceChildren(...(list.length ? list.map(newsItem) : [el("li", { class: "muted" }, "Aucune actu récente trouvée pour " + name + ".")]));
+  $("asset-news").replaceChildren(...(list.length ? list.map((n) => newsItem(n)) : [el("li", { class: "muted" }, "Aucune actu récente trouvée pour " + name + ".")]));
   $("news-asset-title").textContent = "Sur " + name;
-  $("news-asset").replaceChildren(...(state.assetNews.length ? state.assetNews.slice(0, 20).map(newsItem) : [el("li", { class: "muted" }, "Aucune actu récente.")]));
+  $("news-asset").replaceChildren(...(state.assetNews.length ? state.assetNews.slice(0, 20).map((n) => newsItem(n)) : [el("li", { class: "muted" }, "Aucune actu récente.")]));
 }
 
-let newsSource = "all";
+let newsSource = "all", newsTopic = "all";
 async function loadNews() {
   try { state.allNews = await api("/api/news"); } catch (e) { state.allNews = { items: [], status: [], error: e.message }; }
   if (!$("view-actus").hidden) renderNews();
@@ -313,13 +341,16 @@ async function loadNews() {
 function renderNews() {
   const d = state.allNews;
   if (!d) { loadNews(); return; }
+  const counts = {}; for (const n of d.items) { const t = topicOf(n.title).id; counts[t] = (counts[t] || 0) + 1; }
+  $("news-topics").replaceChildren(el("button", { class: newsTopic === "all" ? "on" : "", onclick: () => { newsTopic = "all"; renderNews(); } }, "Tous les thèmes"),
+    ...TOPICS.filter((t) => counts[t.id]).map((t) => el("button", { class: newsTopic === t.id ? "on" : "", onclick: () => { newsTopic = t.id; renderNews(); } }, `${t.label} · ${counts[t.id]}`)));
   $("news-sources").replaceChildren(
-    el("button", { class: "chip" + (newsSource === "all" ? " on" : ""), onclick: () => { newsSource = "all"; renderNews(); } }, "Toutes les sources"),
-    ...d.status.map((s) => el("button", { class: "chip" + (newsSource === s.id ? " on" : ""), title: s.ok ? `${s.count} titres` : "Source indisponible pour le moment", onclick: () => { newsSource = s.id; renderNews(); } },
+    el("button", { class: "src-chip" + (newsSource === "all" ? " on" : ""), onclick: () => { newsSource = "all"; renderNews(); } }, "Toutes les sources"),
+    ...d.status.map((s) => el("button", { class: "src-chip" + (newsSource === s.id ? " on" : ""), title: s.ok ? `${s.count} titres` : "Source indisponible pour le moment", onclick: () => { newsSource = s.id; renderNews(); } },
       el("span", { class: "dot" + (s.ok ? "" : " ko") }), s.label)));
   const f = $("news-filter").value.trim().toLowerCase();
-  const items = d.items.filter((n) => (newsSource === "all" || n.sourceId === newsSource) && (!f || n.title.toLowerCase().includes(f))).slice(0, 120);
-  $("news-list").replaceChildren(...(items.length ? items.map(newsItem) : [el("li", { class: "muted" }, d.error ? "Actualités indisponibles : " + d.error : "Aucun titre ne correspond.")]));
+  const items = d.items.filter((n) => (newsSource === "all" || n.sourceId === newsSource) && (newsTopic === "all" || topicOf(n.title).id === newsTopic) && (!f || n.title.toLowerCase().includes(f))).slice(0, 120);
+  $("news-list").replaceChildren(...(items.length ? items.map((n) => newsItem(n, 56)) : [el("li", { class: "muted" }, d.error ? "Actualités indisponibles : " + d.error : "Aucun titre ne correspond.")]));
 }
 $("news-filter").addEventListener("input", renderNews);
 
@@ -458,10 +489,16 @@ $("overlays").querySelectorAll("button").forEach((b) => b.classList.toggle("on",
   $("ai-state").className = "badge " + (state.config.ai ? "ok" : "ko");
   $("go").disabled = !state.config.ai;
   if (!state.config.ai) $("ai-status").textContent = "Pour activer l'analyse, l'administrateur du site doit ajouter une clé API Anthropic (variable ANTHROPIC_API_KEY).";
-  renderTicker(); renderWatch();
-  Monde.init(ctx); Predictions.init(ctx); Entreprise.init(ctx);
+  renderTicker();
+  Notify.init({ open: (s) => ctx.open(s) });
+  Browser.init(ctx); browserReady = true;
+  Predictions.init(ctx); Entreprise.init(ctx); Calendar.init(ctx); Journal.init(ctx);
   connectLive();
-  onLive("news", (d) => { toast(`${d.count} nouveau${d.count > 1 ? "x" : ""} titre${d.count > 1 ? "s" : ""} dans les actualités`); loadNews(); });
+  onLive("news", (d) => {
+    Notify.notify({ title: `${d.count} nouveau${d.count > 1 ? "x" : ""} titre${d.count > 1 ? "s" : ""} dans les actualités`, body: d.latest?.[0]?.title || "", kind: "news", browser: true });
+    loadNews();
+  });
+  renderMiniCal(); setInterval(renderMiniCal, 10 * 60 * 1000);
   route();
   loadSymbol(state.symbol);
   refreshQuotes(); setInterval(refreshQuotes, 20000);

@@ -7,9 +7,12 @@ Outil de support pour traders, en français :
 - **Actualités** : titres récents de Boursorama, BFM Business, Bloomberg, Les Échos, Zonebourse, Investing.com, Le Figaro et Reuters, plus les actus propres à l'actif affiché.
 - **Académie** : 23 leçons (bases du trading, indicateurs, grands indices). Chaque leçon affiche ce que l'indicateur dit **en ce moment** sur l'actif suivi.
 - **Anticipations par Claude** : trois scénarios chiffrés (haussier, central, baissier) à partir des indicateurs et des derniers titres de presse.
-- **Monde** : plus de 55 marchés rafraîchis toutes les 20 secondes (indices d'Europe, d'Amériques et d'Asie, taux US, devises, matières premières, cryptos).
-- **Prédictions IA en continu** : toutes les heures, Claude relit les actus et les indicateurs de 15 actifs et met à jour sa prédiction à 1–5 séances. Les navigateurs ouverts la reçoivent en direct. Chaque prédiction est jugée après 7 jours pour afficher un taux de réussite réel.
-- **Entreprises** : profil, comptes annuels sur 5 ans (compte de résultat, bilan, flux de trésorerie), ratios et publications de résultats.
+- **Marchés** : onglets par famille de titres (indices du monde entier, actions, crypto, devises, matières premières, taux), cartes avec logo ou drapeau, cours et mini-courbe rafraîchis toutes les 20 secondes.
+- **Calendrier** : annonces économiques de la semaine et de la suivante (inflation, emploi, banques centrales…) et publications de résultats, avec rappel 15 minutes avant les annonces à fort impact.
+- **Journal de trading** : saisie des trades, résultat, gain en R, taux de réussite et courbe des résultats (enregistré dans le navigateur).
+- **Notifications** : centre de notifications, pop-ups, alertes de prix et notifications du navigateur ; animations de gain et de perte (désactivables).
+- **Prédictions en continu** : sans clé payante, un modèle automatique gratuit (70 % indicateurs techniques, 30 % ton des actus) les recalcule toutes les 15 minutes. Avec une clé Anthropic, toutes les heures, Claude relit les actus et les indicateurs de 15 actifs et met à jour sa prédiction à 1–5 séances. Les navigateurs ouverts la reçoivent en direct. Chaque prédiction est jugée après 7 jours pour afficher un taux de réussite réel.
+- **Entreprises** : profil, comptes annuels (compte de résultat, bilan, flux de trésorerie), ratios, publications de résultats et **prévisionnel** (consensus des analystes : chiffre d'affaires et bénéfice attendus, objectif de cours, recommandations). Gratuit via Yahoo Finance, ou Financial Modeling Prep avec une clé.
 
 ## Lancer en local
 
@@ -53,7 +56,9 @@ Chaque analyse appelle Claude Opus 5.5 et coûte quelques centimes. Pour protég
 |---|---|---|
 | Cours | Yahoo Finance (API publique non officielle) | Gratuit, sans clé. Selon les places, les cours peuvent avoir 15 minutes de retard. La crypto est en temps réel. |
 | Actus | Google News RSS, filtré par journal | Seuls les titres et les liens sont affichés. Les articles s'ouvrent sur le site du journal. |
-| Bilans et ratios | Financial Modeling Prep | Comptes repris des publications officielles des sociétés. Offre payante nécessaire pour les actions hors États-Unis. |
+| Bilans, ratios, prévisions | Yahoo Finance (gratuit) ou Financial Modeling Prep (clé `FMP_API_KEY`) | Comptes repris des publications officielles des sociétés ; prévisions = consensus des analystes. |
+| Calendrier économique | Flux public de Forex Factory | Annonces de la semaine en cours et de la suivante. |
+| Logos et drapeaux | financialmodelingprep.com (logos), flagcdn.com (drapeaux) | Repli automatique sur un monogramme si l'image ne charge pas. |
 
 **Avant d'ouvrir l'outil au public ou de le faire payer**, remplace Yahoo Finance par un fournisseur sous licence : Twelve Data, Polygon.io, EODHD ou Financial Modeling Prep. Seul le fichier `lib/market.js` est à modifier. Pour les actus, vérifie les conditions d'utilisation de chaque source.
 
@@ -65,7 +70,10 @@ lib/market.js        cours, recherche d'actifs (Yahoo Finance)
 lib/news.js          actualités (Google News RSS)
 lib/ai.js            appels à Claude (API Anthropic)
 lib/predictions.js   moteur de prédictions en continu et suivi du taux de réussite
-lib/fundamentals.js  fiches entreprises (Financial Modeling Prep)
+lib/fundamentals.js  fiches entreprises (choix du fournisseur)
+lib/yahoo-fundamentals.js bilans et prévisions gratuits (Yahoo Finance)
+lib/calendar.js      calendrier économique et résultats à venir
+lib/sentiment.js     ton des titres d'actualité (modèle de prédiction gratuit)
 lib/live.js          diffusion en direct vers les navigateurs (Server-Sent Events)
 lib/mock.js          données fictives pour MOCK=1
 public/index.html    interface
@@ -73,7 +81,12 @@ public/app.js        logique de l'interface, graphiques, direct
 public/indicators.js calcul des indicateurs techniques
 public/academy.js    contenu des leçons
 public/universe.js   liste des marchés suivis
-public/monde.js      vue Monde
+public/browser.js    onglets par famille de titres (page Marchés)
+public/calendar.js   vue Calendrier
+public/journal.js    vue Journal de trading
+public/notify.js     notifications, pop-ups et alertes de prix
+public/fx.js         animations de gain et de perte
+public/visuals.js    logos, drapeaux, icônes et illustrations par thème
 public/predictions.js vue Prédictions IA
 public/entreprise.js vue Entreprises
 ```

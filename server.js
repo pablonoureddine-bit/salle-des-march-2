@@ -7,6 +7,7 @@ import { analyse, aiEnabled, Anthropic } from "./lib/ai.js";
 import { streamHandler, broadcast } from "./lib/live.js";
 import { startPredictions, snapshot as predictionsSnapshot, runCycle } from "./lib/predictions.js";
 import { fundamentals, fundamentalsEnabled } from "./lib/fundamentals.js";
+import { calendar } from "./lib/calendar.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -32,6 +33,9 @@ app.post("/api/predictions/run", (req, res) => {
   if (!process.env.ADMIN_TOKEN || req.get("x-admin-token") !== process.env.ADMIN_TOKEN) return res.status(403).json({ error: "Accès refusé" });
   runCycle(); res.json({ ok: true });
 });
+
+// Calendrier des événements à venir.
+app.get("/api/calendar", wrap(() => calendar()));
 
 // Fiche entreprise.
 app.get("/api/fundamentals", wrap(async (req) => {

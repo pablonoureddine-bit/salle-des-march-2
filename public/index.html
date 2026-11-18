@@ -4,55 +4,69 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Salle des marchés</title>
-<meta name="description" content="Cours en direct, analyse technique, actualités financières et académie de trading.">
+<meta name="description" content="Cours, prédictions, bilans d'entreprises, calendrier économique, journal de trading et académie.">
+<meta name="theme-color" content="#0B1A33">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <header class="bar">
   <div class="bar-in">
-    <a class="logo" href="#marches"><span class="logo-mark" aria-hidden="true"></span>Salle des marchés</a>
+    <a class="logo" href="#marches" aria-label="Accueil"><span class="logo-mark" aria-hidden="true"></span><span>Salle des marchés</span></a>
     <nav class="tabs" aria-label="Sections">
       <a href="#marches" data-view="marches">Marchés</a>
-      <a href="#monde" data-view="monde">Monde</a>
-      <a href="#predictions" data-view="predictions">Prédictions IA</a>
+      <a href="#predictions" data-view="predictions">Prédictions</a>
       <a href="#entreprise" data-view="entreprise">Entreprises</a>
-      <a href="#actus" data-view="actus">Actualités</a>
+      <a href="#calendrier" data-view="calendrier">Calendrier</a>
+      <a href="#actus" data-view="actus">Actus</a>
+      <a href="#journal" data-view="journal">Journal</a>
       <a href="#academie" data-view="academie">Académie</a>
     </nav>
-    <div class="search">
-      <input id="search" type="search" placeholder="Rechercher un actif (LVMH, Apple, ETH…)" autocomplete="off" aria-label="Rechercher un actif">
-      <div class="search-res" id="search-res" hidden></div>
+    <div class="bar-tools">
+      <div class="search">
+        <input id="search" type="search" placeholder="Rechercher un actif…" autocomplete="off" aria-label="Rechercher un actif">
+        <div class="search-res" id="search-res" hidden></div>
+      </div>
+      <button class="bell" id="bell" aria-label="Notifications"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v4l-2 3h16l-2-3V9a6 6 0 0 0-6-6zm-2 15a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span class="bell-count" id="bell-count" hidden>0</span></button>
+      <div class="notif-panel" id="notif-panel" hidden></div>
     </div>
   </div>
   <div class="ticker" id="ticker" aria-label="Cours des principaux marchés"></div>
 </header>
 
 <div class="banner" id="mock-banner" hidden>Mode démonstration : les cours et les actus affichés sont fictifs.</div>
+<div class="popups" id="popups" aria-live="polite"></div>
 
 <main class="wrap">
   <!-- ───────── MARCHÉS ───────── -->
   <section class="view" id="view-marches">
-    <div class="quote">
+    <div class="families" id="families" role="tablist" aria-label="Familles de titres"></div>
+    <div class="movers" id="movers"></div>
+    <div class="cards" id="cards"></div>
+
+    <div class="quote panel" id="quote-box">
       <div class="q-id">
+        <span id="q-visual"></span>
+        <div>
+          <h1 id="q-name">—</h1>
+          <span class="q-sym mono" id="q-sym"></span>
+        </div>
         <span class="live-dot" id="live-dot" title="Mise à jour en direct"></span>
-        <h1 id="q-name">—</h1>
-        <span class="q-sym mono" id="q-sym"></span>
-        <button class="small-btn" id="q-company" hidden>Fiche entreprise</button>
       </div>
       <div class="q-px">
         <span class="px mono" id="q-px">—</span>
-        <span class="chg mono" id="q-chg"></span>
+        <span class="chip big" id="q-chg"></span>
+      </div>
+      <div class="q-actions">
+        <button class="btn-soft" id="q-alert">🔔 Créer une alerte</button>
+        <button class="btn-soft" id="q-trade">Noter un trade</button>
+        <button class="btn-soft" id="q-company" hidden>Fiche entreprise</button>
       </div>
       <div class="q-meta muted mono" id="q-meta"></div>
     </div>
 
     <div class="layout">
-      <aside class="watch panel" aria-label="Liste des actifs">
-        <div id="watchlist"></div>
-      </aside>
-
       <section class="panel chart-panel">
         <div class="toolbar">
           <div class="seg" id="tf" role="group" aria-label="Unité de temps">
@@ -78,25 +92,29 @@
           <div class="score-top"><span class="verdict" id="verdict">—</span><span class="mono" id="score-num"></span></div>
           <div class="gauge" aria-hidden="true"><div class="needle" id="needle"></div></div>
           <div class="gauge-scale mono"><span>−100</span><span>0</span><span>+100</span></div>
-          <div class="rows" id="rows"></div>
+          <details class="rows-wrap"><summary>Détail des indicateurs</summary><div class="rows" id="rows"></div></details>
         </section>
         <section class="panel">
           <div class="panel-head"><h2>Niveaux clés</h2><a class="small" href="#academie/tendance">Comprendre</a></div>
           <div class="levels" id="levels"></div>
         </section>
         <section class="panel">
-          <div class="panel-head"><h2>Actus de l'actif</h2><a class="small" href="#actus">Toutes les actus</a></div>
+          <div class="panel-head"><h2>Actus de l'actif</h2><a class="small" href="#actus">Toutes</a></div>
           <ul class="news compact" id="asset-news"><li class="muted">Chargement…</li></ul>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><h2>À venir</h2><a class="small" href="#calendrier">Calendrier</a></div>
+          <ul class="mini-cal" id="mini-cal"><li class="muted">Chargement…</li></ul>
         </section>
       </aside>
     </div>
 
     <section class="panel ai">
       <div class="panel-head">
-        <h2>Anticipations par Claude</h2>
+        <h2>Analyse détaillée par Claude</h2>
         <span class="badge" id="ai-state">IA</span>
       </div>
-      <p class="muted small" style="margin:0 0 12px">Claude croise les indicateurs ci-dessus avec les derniers titres de presse sur l'actif et les marchés, puis propose trois scénarios chiffrés.</p>
+      <p class="muted small" style="margin:0 0 12px">Claude croise les indicateurs avec les derniers titres de presse et propose trois scénarios chiffrés.</p>
       <div class="ai-form">
         <label>Horizon
           <select id="horizon">
@@ -109,49 +127,36 @@
           <select id="profil"><option value="prudent">Prudent</option><option value="équilibré" selected>Équilibré</option><option value="dynamique">Dynamique</option></select>
         </label>
         <label>Profondeur
-          <select id="depth"><option value="standard" selected>Standard</option><option value="approfondie">Approfondie (plus lente)</option></select>
+          <select id="depth"><option value="standard" selected>Standard</option><option value="approfondie">Approfondie</option></select>
         </label>
         <label class="grow">Tes notes (optionnel)
-          <input id="notes" type="text" placeholder="ex. réunion de la Fed mercredi, je suis déjà acheteur à 7 300">
+          <input id="notes" type="text" placeholder="ex. réunion de la Fed mercredi">
         </label>
         <button class="primary" id="go">Générer l'analyse</button>
       </div>
       <p class="status" id="ai-status" role="status"></p>
       <div class="result" id="result" hidden></div>
-      <p class="disclaimer">Outil d'aide à la décision, pas un conseil en investissement. Les scénarios sont des hypothèses fondées sur les seules données affichées. Ne risque jamais un capital que tu ne peux pas perdre.</p>
+      <p class="disclaimer">Outil d'aide à la décision, pas un conseil en investissement. Ne risque jamais un capital que tu ne peux pas perdre.</p>
     </section>
-  </section>
-
-  <!-- ───────── MONDE ───────── -->
-  <section class="view" id="view-monde" hidden>
-    <div class="panel-head big">
-      <div><div class="eyebrow" id="monde-time">Chargement des cours…</div><h1>Marchés mondiaux</h1></div>
-      <div class="seg" id="monde-filter" role="group" aria-label="Filtrer">
-        <button data-f="all">Tout</button><button data-f="europe">Europe</button><button data-f="ameriques">Amériques</button><button data-f="asie">Asie</button><button data-f="taux">Taux</button><button data-f="devises">Devises</button><button data-f="matieres">Matières</button><button data-f="crypto">Crypto</button>
-      </div>
-    </div>
-    <div class="movers panel" id="monde-movers"></div>
-    <div class="monde-grid" id="monde-grid"></div>
-    <p class="muted small">Cours rafraîchis toutes les 20 secondes. Selon les places, ils peuvent avoir jusqu'à 15 minutes de retard. Clique sur une ligne pour ouvrir le graphique.</p>
   </section>
 
   <!-- ───────── PRÉDICTIONS ───────── -->
   <section class="view" id="view-predictions" hidden>
-    <div class="panel-head big">
-      <div><div class="eyebrow"><span class="live-dot on"></span> <span id="pred-status">Chargement…</span></div><h1>Prédictions IA</h1></div>
+    <div class="page-head">
+      <div><div class="eyebrow"><span class="live-dot on"></span> <span id="pred-status">Chargement…</span></div><h1>Prédictions</h1></div>
       <div class="seg" id="pred-filter" role="group" aria-label="Filtrer"></div>
     </div>
-    <p class="muted" style="margin:0;max-width:80ch">Claude relit en continu les dernières actualités et les indicateurs techniques de chaque actif, puis met à jour sa prédiction à 1–5 séances. Chaque prédiction est jugée après 7 jours pour mesurer le taux de réussite réel.</p>
+    <p class="lead" id="pred-lead">Prévisions à 1–5 séances, recalculées en continu à partir des indicateurs techniques et des dernières actus. Chaque prédiction est jugée après 7 jours pour mesurer le taux de réussite réel.</p>
     <div class="stats" id="pred-stats"></div>
     <div class="pred-grid" id="pred-grid"></div>
-    <p class="disclaimer">Les prédictions sont générées automatiquement par une intelligence artificielle. Elles peuvent être fausses et ne constituent pas un conseil en investissement ni une recommandation d'achat ou de vente.</p>
+    <p class="disclaimer">Prédictions générées automatiquement. Elles peuvent être fausses et ne constituent pas un conseil en investissement ni une recommandation d'achat ou de vente.</p>
   </section>
 
   <!-- ───────── ENTREPRISES ───────── -->
   <section class="view" id="view-entreprise" hidden>
-    <div class="academy">
-      <nav class="panel lessons" aria-label="Sociétés">
-        <div class="search" style="margin:4px 4px 8px;max-width:none">
+    <div class="split">
+      <nav class="panel sidenav" aria-label="Sociétés">
+        <div class="search inline">
           <input id="ent-search" type="search" placeholder="Chercher une société" autocomplete="off" aria-label="Chercher une société">
           <div class="search-res" id="ent-res" hidden></div>
         </div>
@@ -161,15 +166,28 @@
     </div>
   </section>
 
+  <!-- ───────── CALENDRIER ───────── -->
+  <section class="view" id="view-calendrier" hidden>
+    <div class="page-head">
+      <div><div class="eyebrow">Cette semaine et la suivante</div><h1>Calendrier</h1></div>
+      <div class="seg" id="cal-filter" role="group" aria-label="Filtrer">
+        <button data-f="fort">Les plus importants</button><button data-f="eco">Économie</button><button data-f="resultats">Résultats d'entreprises</button><button data-f="tout">Tout</button>
+      </div>
+    </div>
+    <p class="lead">Les annonces qui font bouger les marchés : inflation, emploi, décisions des banques centrales, résultats des grandes entreprises. Les heures sont à l'heure de ton appareil. Tu reçois une notification 15 minutes avant chaque annonce à fort impact.</p>
+    <div class="cal" id="cal-list"></div>
+  </section>
+
   <!-- ───────── ACTUALITÉS ───────── -->
   <section class="view" id="view-actus" hidden>
-    <div class="panel-head big">
-      <div><div class="eyebrow">Mis à jour toutes les 5 minutes</div><h1>Actualités des marchés</h1></div>
-      <input id="news-filter" type="search" placeholder="Filtrer les titres (Fed, pétrole, LVMH…)" aria-label="Filtrer les titres">
+    <div class="page-head">
+      <div><div class="eyebrow">Mis à jour toutes les 5 minutes</div><h1>Actualités</h1></div>
+      <input id="news-filter" type="search" placeholder="Filtrer (Fed, pétrole, LVMH…)" aria-label="Filtrer les titres">
     </div>
+    <div class="families" id="news-topics" role="tablist" aria-label="Thèmes"></div>
     <div class="chips" id="news-sources"></div>
     <div class="news-grid">
-      <section class="panel"><ul class="news" id="news-list"><li class="muted">Chargement des actualités…</li></ul></section>
+      <section class="panel"><ul class="news rich" id="news-list"><li class="muted">Chargement des actualités…</li></ul></section>
       <aside class="panel">
         <div class="panel-head"><h2 id="news-asset-title">Sur l'actif suivi</h2></div>
         <ul class="news compact" id="news-asset"></ul>
@@ -178,10 +196,47 @@
     <p class="muted small">Titres et liens fournis via Google News. Les articles s'ouvrent sur le site de chaque journal.</p>
   </section>
 
+  <!-- ───────── JOURNAL ───────── -->
+  <section class="view" id="view-journal" hidden>
+    <div class="page-head">
+      <div><div class="eyebrow" id="j-open"></div><h1>Journal de trading</h1></div>
+    </div>
+    <p class="lead">Note chaque trade pour comprendre ce qui marche pour toi. Ton journal est enregistré dans ce navigateur uniquement.</p>
+    <div class="stats four" id="j-stats"></div>
+    <section class="panel"><div class="panel-head"><h2>Évolution de tes résultats</h2></div><div id="j-curve"></div></section>
+    <div class="split rev">
+      <section class="panel">
+        <h2>Nouveau trade</h2>
+        <form id="j-form" class="j-form" novalidate>
+          <label>Date<input id="j-date" type="date"></label>
+          <label>Actif<input id="j-symbol" type="text" placeholder="CAC 40, Apple…"></label>
+          <label>Sens<select id="j-side"><option value="achat">Achat</option><option value="vente">Vente</option></select></label>
+          <label>Quantité<input id="j-qty" type="number" step="any" min="0" placeholder="10"></label>
+          <label>Prix d'entrée<input id="j-entry" type="number" step="any" min="0"></label>
+          <label>Prix de sortie<input id="j-exit" type="number" step="any" min="0" placeholder="vide si en cours"></label>
+          <label>Stop<input id="j-stop" type="number" step="any" min="0"></label>
+          <label>Objectif<input id="j-target" type="number" step="any" min="0"></label>
+          <label>Frais<input id="j-fees" type="number" step="any" min="0" placeholder="0"></label>
+          <label>Stratégie<input id="j-setup" type="text" placeholder="cassure, rebond sur support…"></label>
+          <label>Émotion<select id="j-emotion"></select></label>
+          <label class="full">Notes<input id="j-notes" type="text" placeholder="ce que j'ai bien ou mal fait"></label>
+          <div class="full j-actions"><button class="primary" id="j-submit" type="submit">Ajouter le trade</button><button type="button" id="j-cancel" hidden>Annuler</button><span class="status" id="j-msg" role="status"></span></div>
+        </form>
+      </section>
+      <section class="panel">
+        <h2>Mes trades</h2>
+        <div class="tbl-wrap"><table class="tbl">
+          <thead><tr><th>Date</th><th>Actif</th><th>Sens</th><th class="r">Entrée</th><th class="r">Sortie</th><th class="r">Résultat</th><th class="hide-sm">Émotion</th><th></th></tr></thead>
+          <tbody id="j-list"></tbody>
+        </table></div>
+      </section>
+    </div>
+  </section>
+
   <!-- ───────── ACADÉMIE ───────── -->
   <section class="view" id="view-academie" hidden>
-    <div class="academy">
-      <nav class="panel lessons" id="lessons" aria-label="Leçons"></nav>
+    <div class="split">
+      <nav class="panel sidenav lessons" id="lessons" aria-label="Leçons"></nav>
       <article class="panel lesson" id="lesson"></article>
     </div>
   </section>

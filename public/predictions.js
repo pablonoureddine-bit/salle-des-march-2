@@ -1,5 +1,7 @@
 // Vue "Prédictions" : prédictions IA mises à jour en continu par le serveur, reçues en direct.
-import { $, el, api, fmt, pct, ago, onLive, toast } from "./util.js";
+import { $, el, api, fmt, pct, ago, onLive } from "./util.js";
+import { assetVisual, topicOf, topicVisual } from "./visuals.js";
+import { notify } from "./notify.js";
 import { assetClass } from "./universe.js";
 
 let ctx, data = null, filter = "all", clock = null;
@@ -13,7 +15,8 @@ export function init(c) {
     if (m.status === "update" && m.prediction) {
       const i = data.predictions.findIndex((p) => p.symbol === m.prediction.symbol);
       if (i >= 0) data.predictions[i] = m.prediction; else data.predictions.push(m.prediction);
-      if (!$("view-predictions").hidden) toast(`Nouvelle prédiction : ${m.prediction.name}`);
+      const p = m.prediction;
+      notify({ title: `Nouvelle prédiction : ${p.name}`, body: `${p.direction === "hausse" ? "↗ Hausse" : p.direction === "baisse" ? "↘ Baisse" : "→ Neutre"} · ${p.probUp} % de chances de hausse`, kind: "prediction", symbol: p.symbol, popup: !$("view-predictions").hidden || p.direction !== "neutre" });
       flash = m.prediction.symbol;
     }
     if (m.status === "done") { data.running = false; data.lastRun = m.lastRun; data.nextRun = m.nextRun; load(); }
@@ -39,8 +42,7 @@ function renderStatus() {
   const s = $("pred-status");
   if (!data) { s.textContent = "Chargement…"; return; }
   if (data.error) { s.textContent = "Prédictions indisponibles : " + data.error; return; }
-  if (!data.enabled) { s.textContent = "Les prédictions automatiques ne sont pas encore activées : l'administrateur du site doit ajouter une clé API Anthropic."; return; }
-  const parts = [];
+  const parts = [data.model === "claude" ? "Analyse par Claude" : "Modèle automatique gratuit"];
   if (data.running) parts.push("Mise à jour en cours…");
   else if (data.lastRun) parts.push(`Dernière mise à jour ${ago(data.lastRun)}`);
   if (data.nextRun && !data.running) {
@@ -59,7 +61,7 @@ function render() {
   $("pred-stats").replaceChildren(...(st ? [
     stat(st.total ? Math.round(st.correct / st.total * 100) + " %" : "—", "de bonnes directions", st.total ? `sur ${st.total} prédictions arrivées à échéance` : "aucune prédiction encore arrivée à échéance (7 jours)"),
     stat(String(st.pending), "en cours", "prédictions pas encore jugées"),
-    stat(data.demo ? "Démo" : (data.intervalMin ? data.intervalMin + " min" : "—"), data.demo ? "données fictives" : "entre deux mises à jour", "seuls les actifs dont les actus ou le prix ont changé sont recalculés"),
+    stat(data.intervalMin ? data.intervalMin + " min" : "—", "entre deux mises à jour", data.model === "claude" ? "seuls les actifs dont les actus ou le prix ont changé sont recalculés" : "modèle gratuit : 70 % indicateurs techniques, 30 % ton des actus"),
   ] : []));
   const list = (data?.predictions || []).filter((p) => filter === "all" || (p.assetClass || assetClass(p.symbol)) === filter);
   $("pred-grid").replaceChildren(...(list.length ? list.map(card) : [el("p", { class: "muted" }, data?.enabled ? "Les premières prédictions arrivent dans quelques minutes." : "")]));
@@ -73,7 +75,7 @@ function card(p) {
   const move = p.price && p.priceAtPrediction ? p.price / p.priceAtPrediction - 1 : null;
   return el("article", { class: "panel pcard" + (flash === p.symbol ? " fresh" : "") },
     el("header", null,
-      el("button", { class: "linklike", onclick: () => ctx.open(p.symbol, p.name), title: "Ouvrir le graphique" }, el("h3", null, p.name)),
+      el("button", { class: "linklike p-id", onclick: () => ctx.open(p.symbol, p.name), title: "Ouvrir le graphique" }, assetVisual(p.symbol, p.name, 38), el("h3", null, p.name)),
       el("span", { class: "pill " + c }, p.direction === "hausse" ? "↗ Hausse" : p.direction === "baisse" ? "↘ Baisse" : "→ Neutre")),
     el("div", { class: "pmeta mono" }, `${fmt(p.priceAtPrediction)} au moment de la prédiction`, move != null && Math.abs(move) > 0 ? el("span", { class: move > 0 ? "up" : "down" }, ` · ${pct(move)} depuis`) : null),
     el("div", { class: "prob" },
@@ -86,7 +88,8 @@ function card(p) {
     p.summary ? el("p", { class: "psum" }, p.summary) : null,
     p.catalysts?.length ? el("div", null, el("div", { class: "eyebrow" }, "Actus prises en compte"),
       el("ul", { class: "cat" }, p.catalysts.map((k) => el("li", { class: k.effect === "positif" ? "pos" : k.effect === "négatif" ? "neg" : "" },
-        el("a", { href: k.link, target: "_blank", rel: "noopener noreferrer" }, k.title), el("small", null, ` ${k.source}`), k.why ? el("span", null, k.why) : null)))) : null,
+        topicVisual(topicOf(k.title), 36),
+        el("div", null, el("a", { href: k.link, target: "_blank", rel: "noopener noreferrer" }, k.title), el("small", null, ` ${k.source}`), k.why ? el("span", null, k.why) : null))))) : null,
     p.risks?.length ? el("details", null, el("summary", null, "Risques"), el("ul", null, p.risks.map((r) => el("li", null, r)))) : null,
-    el("footer", { class: "muted small" }, `Horizon ${p.horizon} · générée ${ago(p.createdAt)}${p.demo ? " · exemple fictif" : ""}`));
+    el("footer", { class: "muted small" }, el("span", { class: "model-tag" }, p.model === "claude" ? "Claude" : "Modèle automatique"), ` Horizon ${p.horizon} · générée ${ago(p.createdAt)}${p.demo ? " · données fictives" : ""}`));
 }
