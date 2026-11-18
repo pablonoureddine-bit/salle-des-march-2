@@ -20,7 +20,6 @@
       <a href="#marches" data-view="marches"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 17l5-5 4 3 8-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 7h5v5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Marchés</span></a>
       <a href="#trader" data-view="trader"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M7 4v16M7 8H4v7h6V8zM17 4v16M14 6h6v8h-6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Trader</span></a>
       <a href="#infos" data-view="infos"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Infos</span></a>
-      <a href="#entreprise" data-view="entreprise"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 20V8l6-4v16M10 20V10h10v10M3 20h18M13 13h4M13 16h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg><span>Entreprises</span></a>
       <a href="#compte" data-view="compte"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 12h5M4 9h16" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="12" r="1.2" fill="currentColor"/></svg><span>Compte</span></a>
       <a href="#academie" data-view="academie"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Académie</span></a>
     </nav>
@@ -116,6 +115,7 @@
 
   <!-- ───────── MARCHÉS ───────── -->
   <section class="view" id="view-marches">
+    <section class="home-pos" id="home-pos" hidden></section>
     <div class="sessions" id="sessions" aria-label="Bourses ouvertes maintenant"></div>
     <div class="families" id="families" role="tablist" aria-label="Familles de titres"></div>
     <div class="movers" id="movers"></div>
@@ -142,6 +142,7 @@
         <button class="btn-soft" id="q-trade">Noter un trade</button>
         <button class="btn-soft" id="q-company" hidden>Fiche entreprise</button>
       </div>
+      <div class="q-positions" id="q-positions" hidden></div>
       <div class="q-meta muted mono" id="q-meta"></div>
     </div>
 

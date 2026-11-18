@@ -103,7 +103,7 @@ export function close(id, { fraction = 1, reason = "manuelle", anchor = null } =
   changed();
   const why = reason === "stop" ? "Stop loss touché" : reason === "objectif" ? "Take profit atteint" : "Position clôturée";
   burst(gain >= 0 ? "gain" : "loss", { anchor, size: "big", text: (gain >= 0 ? "+" : "") + eur(gain) });
-  notify({ title: `${why} : ${p.name}`, body: `${gain >= 0 ? "Gain" : "Perte"} de ${eur(Math.abs(gain))} (${pct(gain / (p.amount * part || 1))})`, kind: gain >= 0 ? "gain" : "loss", symbol: p.symbol, popup: true, browser: reason !== "manuelle" });
+  notify({ title: `${why} : ${p.name}`, body: `${gain >= 0 ? "Gain" : "Perte"} de ${eur(Math.abs(gain))} (${pct(gain / (p.amount * part || 1))})`, kind: gain >= 0 ? "gain" : "loss", symbol: p.symbol, popup: true, own: reason !== "manuelle", browser: reason !== "manuelle" });
 }
 
 let pendingReset = 0;
@@ -192,4 +192,16 @@ export function positionRow(p) {
     el("div", { class: "dp-act" },
       el("button", { class: "btn-soft", onclick: (e) => close(p.id, { fraction: 0.5, anchor: e.currentTarget }) }, "Clôturer ½"),
       el("button", { class: "btn-soft", onclick: (e) => close(p.id, { anchor: e.currentTarget }) }, "Clôturer")));
+}
+
+// Ligne compacte d'une position, avec son résultat en direct et un bouton pour la clôturer.
+// Utilisée sur la page d'accueil, sous le cours d'un actif et dans le graphique plein écran.
+export function miniRow(p, { showName = true } = {}) {
+  const g = pnl(p);
+  return el("div", { class: "pos-mini " + (g >= 0 ? "pos-up" : "pos-down") },
+    showName ? el("button", { class: "linklike pm-id", onclick: () => ctx.open(p.symbol, p.name) }, assetVisual(p.symbol, p.name, 26), el("b", null, p.name)) : null,
+    el("span", { class: "pill " + (p.side === "achat" ? "up" : "down") }, p.side === "achat" ? "Achat" : "Vente"),
+    el("span", { class: "pm-amt mono" }, eur(p.amount)),
+    el("b", { class: "pm-gain mono " + (g >= 0 ? "up" : "down") }, `${g >= 0 ? "+" : ""}${eur(g)}`),
+    el("button", { class: "pm-close", title: "Clôturer cette position", onclick: (e) => close(p.id, { anchor: e.currentTarget }) }, "Clôturer"));
 }

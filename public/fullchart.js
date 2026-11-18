@@ -10,8 +10,17 @@ const TFS = [["1m", "Direct"], ["15m", "15 min"], ["1h", "1 h"], ["1d", "1 jour"
 let ctx, cur = null, afterBack = null;
 const tok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
+// Positions ouvertes sur l'actif affiché, clôturables d'un toucher.
+function renderPos() {
+  if (!cur) return;
+  const ps = Demo.positions(cur.symbol);
+  cur.posBox.hidden = !ps.length;
+  cur.posBox.replaceChildren(...ps.map((p) => Demo.miniRow(p, { showName: false })));
+}
+
 export function init(c) {
   ctx = c;
+  Demo.onChange(renderPos);
   // Le bouton « retour » du téléphone ferme le plein écran.
   addEventListener("popstate", () => {
     if (cur) close(false);
@@ -27,6 +36,7 @@ export function open(symbol, name) {
   const chartBox = el("div", { class: "fcv-chart" });
   const price = el("span", { class: "fcv-price mono" }), chg = el("span", { class: "chip" }), mkt = el("span", { class: "mkt" });
   const tfs = el("div", { class: "seg fcv-tf" });
+  const posBox = el("div", { class: "fcv-pos" });
   const box = el("div", { class: "fcv", role: "dialog", "aria-modal": "true", "aria-label": `Graphique de ${name}` },
     el("header", { class: "fcv-head" },
       el("button", { class: "fcv-back", "aria-label": "Fermer le plein écran", onclick: () => close() }, "←"),
@@ -35,6 +45,7 @@ export function open(symbol, name) {
       el("button", { class: "fcv-max", title: "Plein écran total", "aria-label": "Plein écran total", onclick: maximize }, "⤢")),
     el("div", { class: "fcv-bar" }, mkt, tfs),
     chartBox,
+    posBox,
     el("footer", { class: "fcv-foot" },
       el("button", { class: "fcv-sell", onclick: () => close(true, () => ctx.trade(symbol, name, "vente")) }, "Vendre"),
       el("button", { class: "fcv-more", onclick: () => close(true, () => ctx.open(symbol, name)) }, "Analyse"),
@@ -42,7 +53,8 @@ export function open(symbol, name) {
   document.body.append(box);
   document.body.classList.add("fcv-open");
   history.pushState({ fcv: 1 }, "");
-  cur = { box, symbol, name, tf, chartBox, price, chg, mkt, tfs, chart: null, series: null, stop: null, timer: null, seq: 0, prev: null };
+  cur = { box, symbol, name, tf, chartBox, price, chg, mkt, tfs, posBox, chart: null, series: null, stop: null, timer: null, seq: 0, prev: null };
+  renderPos();
   tfs.replaceChildren(...TFS.map(([k, l]) => el("button", { "data-tf": k, onclick: () => { cur.tf = k; store.set("sdm.fc.tf", k); load(); } }, l)));
   load();
 }

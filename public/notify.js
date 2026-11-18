@@ -9,8 +9,12 @@ let openSymbol = null;
 const save = () => { store.set("sdm.notifs", items.slice(0, 60)); store.set("sdm.unread", unread); };
 const KIND_ICON = { gain: "▲", loss: "▼", news: "✦", prediction: "◎", alert: "🔔", calendar: "◷", info: "i" };
 
-export function init({ open }) {
+// Les pop-ups ne s'affichent que pour les actifs favoris (★), ou pour ce qui concerne directement l'utilisateur
+// (stop loss / objectif touchés, niveaux de l'Académie). Tout reste visible dans la cloche.
+let isFav = () => false;
+export function init({ open, fav }) {
   openSymbol = open;
+  if (fav) isFav = fav;
   renderBadge();
   $("bell").addEventListener("click", (e) => { e.stopPropagation(); togglePanel(); });
   document.addEventListener("click", (e) => { if (!e.target.closest("#notif-panel, #bell")) $("notif-panel").hidden = true; });
@@ -50,7 +54,8 @@ function renderPanel() {
 }
 
 // Notification : ajoutée au centre, affichée en pop-up, et envoyée au navigateur si l'onglet est en arrière-plan.
-export function notify({ title, body = "", kind = "info", symbol = null, popup = true, browser = false }) {
+export function notify({ title, body = "", kind = "info", symbol = null, popup = true, browser = false, own = false }) {
+  popup = popup && (own || (symbol && isFav(symbol)));
   items.unshift({ title, body, kind, symbol, at: new Date().toISOString() });
   if ($("notif-panel").hidden) unread++;
   save(); renderBadge();
@@ -93,7 +98,7 @@ export function alertForm({ symbol, name, price }) {
         alerts.push({ symbol, name, dir: dirSel.value, level, created: Date.now() });
         store.set("sdm.alerts", alerts);
         modal.remove();
-        notify({ title: "Alerte créée", body: `${name} ${dirSel.value === "above" ? "au-dessus de" : "en dessous de"} ${fmt(level)}`, kind: "alert", symbol });
+        notify({ title: "Alerte créée", body: `${name} ${dirSel.value === "above" ? "au-dessus de" : "en dessous de"} ${fmt(level)}`, kind: "alert", symbol, own: true });
         if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
       } }, "Créer l'alerte"))));
   document.body.append(modal);
@@ -110,7 +115,7 @@ export function checkAlerts(symbol, price, anchor) {
   alerts = alerts.filter((a) => !hit.includes(a));
   store.set("sdm.alerts", alerts);
   for (const a of hit) {
-    notify({ title: `Alerte : ${a.name} ${a.dir === "above" ? "au-dessus de" : "en dessous de"} ${fmt(a.level)}`, body: `Cours actuel : ${fmt(price)}`, kind: "alert", symbol, browser: true });
+    notify({ title: `Alerte : ${a.name} ${a.dir === "above" ? "au-dessus de" : "en dessous de"} ${fmt(a.level)}`, body: `Cours actuel : ${fmt(price)}`, kind: "alert", symbol, browser: true, own: true });
     burst(a.dir === "above" ? "gain" : "loss", { anchor, size: "big", text: fmt(price) });
   }
 }

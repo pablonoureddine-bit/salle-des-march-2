@@ -98,3 +98,45 @@ export function topicVisual(topic, size = 56) {
   box.append(svg(topic.icon, size * 0.5));
   return box;
 }
+
+// ───── Images des informations : une scène illustrée par thème (dessin original, sans photo),
+// avec le logo ou le drapeau du premier actif concerné en médaillon. ─────
+const W = "rgba(255,255,255,.92)", W2 = "rgba(255,255,255,.35)", W3 = "rgba(255,255,255,.14)";
+const SCENES = {
+  "banques-centrales": `<circle cx="128" cy="22" r="30" fill="${W3}"/>
+    <path d="M40 44 80 24l40 20z" fill="${W}"/><rect x="44" y="46" width="72" height="5" fill="${W}"/>
+    ${[50, 64, 78, 92, 106].map((x) => `<rect x="${x}" y="54" width="6" height="26" rx="1" fill="${W}"/>`).join("")}
+    <rect x="40" y="82" width="80" height="6" fill="${W}"/><text x="132" y="62" font-size="22" font-weight="700" fill="${W2}" font-family="sans-serif">%</text>`,
+  energie: `<circle cx="30" cy="20" r="26" fill="${W3}"/>
+    <path d="M44 88 62 26h8l18 62M52 62h28M48 76h36M58 40h16" fill="none" stroke="${W}" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="100" y="52" width="30" height="38" rx="5" fill="${W}"/><path d="M100 62h30M100 80h30" stroke="rgba(0,0,0,.25)" stroke-width="2"/>
+    <path d="M128 18c6 9 10 14 10 19a10 10 0 0 1-20 0c0-5 4-10 10-19z" fill="${W2}"/>`,
+  crypto: `<circle cx="80" cy="50" r="30" fill="${W}"/><circle cx="80" cy="50" r="23" fill="none" stroke="rgba(0,0,0,.15)" stroke-width="2"/>
+    <text x="80" y="62" text-anchor="middle" font-size="32" font-weight="800" fill="rgba(0,0,0,.55)" font-family="sans-serif">₿</text>
+    <path d="M10 30h26v18h14M150 70h-26V52h-14M20 80h30M140 20h-30" fill="none" stroke="${W2}" stroke-width="2"/>
+    <circle cx="10" cy="30" r="3" fill="${W2}"/><circle cx="150" cy="70" r="3" fill="${W2}"/>`,
+  tech: `<rect x="54" y="24" width="52" height="52" rx="8" fill="${W}"/><rect x="68" y="38" width="24" height="24" rx="3" fill="rgba(0,0,0,.35)"/>
+    ${[34, 46, 58, 70].map((y) => `<path d="M54 ${y + 0}H34M106 ${y}h20" stroke="${W2}" stroke-width="2.5"/>`).join("")}
+    ${[64, 76, 88, 100].map((x) => `<path d="M${x - 4} 24V8M${x - 4} 76v16" stroke="${W2}" stroke-width="2.5"/>`).join("")}
+    <circle cx="80" cy="50" r="40" fill="none" stroke="${W3}" stroke-width="10"/>`,
+  resultats: `<rect x="96" y="14" width="44" height="58" rx="5" fill="${W2}"/><path d="M104 28h28M104 38h28M104 48h18" stroke="${W}" stroke-width="3"/>
+    ${[[24, 60], [42, 46], [60, 52], [78, 30]].map(([x, y]) => `<rect x="${x}" y="${y}" width="12" height="${88 - y}" rx="2" fill="${W}"/>`).join("")}
+    <path d="M22 54 48 40l18 6 26-22" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M84 22h10v10" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`,
+  geopolitique: `<circle cx="80" cy="50" r="34" fill="${W2}"/><circle cx="80" cy="50" r="34" fill="none" stroke="${W}" stroke-width="3"/>
+    <path d="M46 50h68M80 16c14 14 14 54 0 68M80 16c-14 14-14 54 0 68M52 32h56M52 68h56" fill="none" stroke="${W}" stroke-width="2"/>
+    <path d="M12 26c14-8 22-8 30 0M118 78c10 6 20 6 30 0" fill="none" stroke="${W2}" stroke-width="3" stroke-linecap="round"/>`,
+  devises: `<circle cx="58" cy="50" r="24" fill="${W}"/><text x="58" y="60" text-anchor="middle" font-size="26" font-weight="800" fill="rgba(0,0,0,.5)" font-family="sans-serif">€</text>
+    <circle cx="104" cy="50" r="24" fill="${W2}"/><text x="104" y="60" text-anchor="middle" font-size="26" font-weight="800" fill="#fff" font-family="sans-serif">$</text>
+    <path d="M58 18c14-10 32-10 46 0M104 82c-14 10-32 10-46 0" fill="none" stroke="${W}" stroke-width="2.5"/><path d="M98 14l6 4-6 5M64 86l-6-4 6-5" fill="none" stroke="${W}" stroke-width="2.5"/>`,
+  marches: `${[[20, 54, 22, true], [36, 46, 24, false], [52, 40, 20, true], [68, 30, 26, true], [84, 36, 18, false], [100, 22, 28, true], [116, 16, 20, true]].map(([x, y, h, up]) => `<path d="M${x + 4} ${y - 6}v${h + 12}" stroke="${W2}" stroke-width="2"/><rect x="${x}" y="${y}" width="8" height="${h}" rx="1.5" fill="${up ? W : W2}"/>`).join("")}
+    <path d="M14 78 50 60l30 6 50-40" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 6"/>`,
+};
+
+export function topicCover(topic, symbol = null, name = "") {
+  const s = document.createElementNS(NS, "svg");
+  s.setAttribute("viewBox", "0 0 160 100"); s.setAttribute("preserveAspectRatio", "xMidYMid slice"); s.setAttribute("aria-hidden", "true");
+  s.innerHTML = SCENES[topic.id] || SCENES.marches;
+  const box = el("span", { class: "cover", style: `background:linear-gradient(135deg, ${topic.c1}, ${topic.c2})`, title: topic.label }, s);
+  if (symbol) box.append(el("span", { class: "cover-badge" }, assetVisual(symbol, name, 24)));
+  return box;
+}

@@ -3,6 +3,7 @@ import { $, el, api, fmt, pct, dir, spark, store } from "./util.js";
 import { WORLD, STOCKS, KNOWN } from "./universe.js";
 import { assetVisual } from "./visuals.js";
 import { subscribeTickers } from "./realtime.js";
+import * as Demo from "./demo.js";
 
 const byId = (id) => WORLD.find((g) => g.id === id).items;
 // Mon suivi : les favoris de l'utilisateur, rafraîchis toutes les 5 secondes avec une courbe en direct.
@@ -30,7 +31,9 @@ export const quotes = new Map();
 
 export function init(c) {
   ctx = c;
-  $("families").replaceChildren(...FAMILIES.map((f) => el("button", { role: "tab", "data-f": f.id, onclick: () => { fam = f.id; store.set("sdm.family", fam); render(); refresh(); } }, f.label)));
+  $("families").replaceChildren(...FAMILIES.map((f) => el("button", { role: "tab", "data-f": f.id, onclick: () => { fam = f.id; store.set("sdm.family", fam); render(); refresh(); } }, f.label)),
+    el("a", { class: "fam-link", href: "#annuaire" }, "🏢 Entreprises par pays"));
+  Demo.onChange(() => !$("view-marches").hidden && render());
   render(); refresh();
   // Mon suivi : toutes les 5 s ; autres familles : toutes les 10 s.
   timer = setInterval(() => { tick++; if (!document.hidden && !$("view-marches").hidden && (fam === "suivi" || tick % 2 === 0)) refresh(); }, 5000);
@@ -79,7 +82,7 @@ function render() {
     const q = quotes.get(s);
     const ch = q?.price != null && q.previousClose ? q.price / q.previousClose - 1 : null;
     const card = el("button", { class: "acard" + (s === cur ? " on" : "") + (q?.moved ? " tick-" + q.moved : ""), onclick: () => ctx.pick(s, n), title: `Voir ${n}` },
-      el("div", { class: "acard-top" }, assetVisual(s, n, 34), el("div", { class: "acard-id" }, el("b", null, n), el("small", null, sub || s))),
+      el("div", { class: "acard-top" }, assetVisual(s, n, 34), el("div", { class: "acard-id" }, el("b", null, n), el("small", null, sub || s)), posBadge(s)),
       el("div", { class: "acard-px" }, el("span", { class: "mono" }, q?.price != null ? fmt(q.price) : "…"), el("span", { class: "chip " + dir(ch) }, ch != null ? pct(ch) : "")),
       q?.spark?.length ? spark(q.spark, 150, 28) : el("span", { class: "spark-ph" }));
     if (q) q.moved = null;
@@ -106,7 +109,7 @@ function renderWall(f, cur) {
     const isLive = pts.length >= 3;
     const open = () => ctx.pick(s, n);
     const card = el("div", { class: "acard wcard" + (s === cur ? " on" : "") + (q?.moved ? " tick-" + q.moved : ""), role: "button", tabindex: "0", title: `Voir ${n}`, onclick: open, onkeydown: (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), open()) },
-      el("div", { class: "acard-top" }, assetVisual(s, n, 40), el("div", { class: "acard-id" }, el("b", null, n), el("small", null, s)),
+      el("div", { class: "acard-top" }, assetVisual(s, n, 40), el("div", { class: "acard-id" }, el("b", null, n), el("small", null, s)), posBadge(s),
         el("button", { class: "wfav", title: "Retirer du suivi", "aria-label": `Retirer ${n} du suivi`, onclick: (e) => { e.stopPropagation(); toggleFav(s); } }, "★")),
       el("div", { class: "acard-px" }, el("span", { class: "mono big" }, q?.price != null ? fmt(q.price) : "…"), el("span", { class: "chip " + dir(ch) }, ch != null ? pct(ch) : "")),
       (isLive ? pts : q?.spark || []).length > 1 ? spark(isLive ? pts : q.spark, 300, 70) : el("span", { class: "spark-ph" }),
@@ -114,4 +117,12 @@ function renderWall(f, cur) {
     if (q) q.moved = null;
     return card;
   }));
+}
+
+// Pastille sur la carte d'un actif où l'on a une position : résultat en direct.
+function posBadge(s) {
+  const ps = Demo.positions(s);
+  if (!ps.length) return null;
+  const g = ps.reduce((a, p) => a + Demo.pnl(p), 0);
+  return el("span", { class: "pos-badge " + (g >= 0 ? "up" : "down"), title: `${ps.length} position(s) ouverte(s)` }, `${g >= 0 ? "+" : ""}${Demo.eur(g)}`);
 }

@@ -124,11 +124,11 @@ function gainXp(n, anchor, LESSONS) {
   const after = levelOf(P.xp);
   burst("gain", { anchor, text: `+${n} XP`, size: n >= 20 ? "big" : "small" });
   if (after.n > before.n) {
-    setTimeout(() => { burst("gain", { size: "big", text: `Niveau ${after.n} !` }); notify({ title: `Niveau ${after.n} atteint : ${after.name}`, body: "Continue comme ça !", kind: "gain" }); }, 700);
+    setTimeout(() => { burst("gain", { size: "big", text: `Niveau ${after.n} !` }); notify({ title: `Niveau ${after.n} atteint : ${after.name}`, body: "Continue comme ça !", kind: "gain", own: true }); }, 700);
   }
   for (const b of BADGES) if (!P.badges.includes(b.id) && b.test(P, LESSONS)) {
     P.badges.push(b.id);
-    setTimeout(() => notify({ title: `Badge débloqué : ${b.icon} ${b.label}`, body: b.desc, kind: "gain" }), 1200);
+    setTimeout(() => notify({ title: `Badge débloqué : ${b.icon} ${b.label}`, body: b.desc, kind: "gain", own: true }), 1200);
   }
   save();
   document.dispatchEvent(new CustomEvent("progress"));

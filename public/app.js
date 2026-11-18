@@ -7,7 +7,7 @@ import * as Calendar from "./calendar.js";
 import * as Journal from "./journal.js";
 import * as Notify from "./notify.js";
 import { burst } from "./fx.js";
-import { assetVisual, topicOf, topicVisual, TOPICS } from "./visuals.js";
+import { assetVisual, topicOf, topicVisual, topicCover, TOPICS } from "./visuals.js";
 import * as Quiz from "./quiz.js";
 import * as RT from "./realtime.js";
 import * as Demo from "./demo.js";
@@ -236,6 +236,7 @@ function renderQuote(prevPrice) {
   if ($("q-visual").dataset.s !== state.symbol) { $("q-visual").replaceChildren(assetVisual(state.symbol, displayName(), 48)); $("q-visual").dataset.s = state.symbol; }
   $("q-sym").textContent = state.symbol;
   favLabel();
+  if ($("q-positions").dataset.s !== state.symbol) { $("q-positions").dataset.s = state.symbol; renderPositions(); }
   $("q-company").hidden = assetClass(state.symbol) !== "action";
   tween($("q-px"), price, fmt);
   const mk = $("q-market");
@@ -371,8 +372,27 @@ $("q-company").addEventListener("click", () => ctx.company(state.symbol));
 $("q-alert").addEventListener("click", () => state.A && Notify.alertForm({ symbol: state.symbol, name: displayName(), price: state.A.last }));
 $("q-trade").addEventListener("click", () => { location.hash = "compte/journal"; });
 const favLabel = () => { $("q-fav").textContent = Browser.isFav(state.symbol) ? "★ Suivi" : "☆ Suivre"; };
-$("q-fav").addEventListener("click", () => { const on = Browser.toggleFav(state.symbol); favLabel(); Notify.notify({ title: on ? `${displayName()} ajouté à ton suivi` : `${displayName()} retiré de ton suivi`, kind: "info", popup: true }); });
+$("q-fav").addEventListener("click", () => { const on = Browser.toggleFav(state.symbol); favLabel(); Notify.notify({ title: on ? `${displayName()} ajouté à ton suivi` : `${displayName()} retiré de ton suivi`, kind: "info", own: true }); });
 $("q-buy").addEventListener("click", () => ctx.trade(state.symbol, displayName()));
+
+// Positions ouvertes : en haut de la page d'accueil et sous le cours de l'actif concerné.
+function renderPositions() {
+  const all = Demo.positions();
+  const home = $("home-pos");
+  home.hidden = !all.length;
+  if (all.length) {
+    const t = Demo.totals(), g = all.reduce((a, p) => a + Demo.pnl(p), 0);
+    home.replaceChildren(
+      el("div", { class: "hp-head" }, el("b", null, `Mes positions (${all.length})`),
+        el("span", { class: "mono " + (g >= 0 ? "up" : "down") }, `${g >= 0 ? "+" : ""}${Demo.eur(g)}`),
+        el("span", { class: "muted small" }, `compte ${Demo.eur(t.total)}`),
+        el("a", { class: "small", href: "#compte/demo" }, "Tout voir")),
+      el("div", { class: "hp-list" }, all.slice(0, 6).map((p) => Demo.miniRow(p))));
+  }
+  const mine = Demo.positions(state.symbol);
+  $("q-positions").hidden = !mine.length;
+  $("q-positions").replaceChildren(...(mine.length ? [el("div", { class: "eyebrow" }, "Tes positions sur cet actif"), ...mine.map((p) => Demo.miniRow(p, { showName: false }))] : []));
+}
 
 async function renderMiniCal() {
   const evs = await Calendar.upcoming(4);
@@ -398,7 +418,7 @@ $("overlays").addEventListener("click", (e) => {
 });
 
 /* ───────── Actualités ───────── */
-const newsItem = (n, size = 36) => { const t = topicOf(n.title); const rel = relatedAssets(n.title, size > 40 ? 4 : 3); return el("li", null, topicVisual(t, size),
+const newsItem = (n, size = 36) => { const t = topicOf(n.title); const rel = relatedAssets(n.title, size > 40 ? 4 : 3); return el("li", { class: size > 40 ? "has-cover" : "" }, topicCover(t, rel[0], KNOWN.get(rel[0]) || rel[0]),
   el("div", null,
     el("a", { href: n.link, target: "_blank", rel: "noopener noreferrer" }, n.title),
     el("span", { class: "meta" }, el("span", { class: "src" }, n.source), el("span", null, ago(n.date)), size > 40 ? el("span", { class: "topic" }, t.label) : null),
@@ -608,14 +628,18 @@ $("overlays").querySelectorAll("button").forEach((b) => b.classList.toggle("on",
   else if (k === "sans accès au modèle") $("ai-status").textContent = "La clé est reconnue mais n'a pas accès au modèle Claude utilisé. Vérifie ton compte sur console.anthropic.com (crédit, organisation).";
   else if (k === "absente") $("ai-status").textContent = "Pour activer l'analyse par Claude, ajoute une clé API Anthropic dans Render (variable ANTHROPIC_API_KEY).";
   renderTicker();
-  Notify.init({ open: (s) => ctx.open(s) });
+  Notify.init({ open: (s) => ctx.open(s), fav: (s) => Browser.isFav(s) });
   Browser.init(ctx); browserReady = true;
   Predictions.init(ctx); Entreprise.init(ctx); Calendar.init(ctx); Journal.init(ctx); Demo.init(ctx); Trader.init(ctx); Sessions.init(ctx); FullChart.init(ctx); Annuaire.init(ctx);
+  Demo.onChange(renderPositions); renderPositions();
   $("chart-full").addEventListener("click", () => FullChart.open(state.symbol, displayName()));
   $("tr-full").addEventListener("click", () => FullChart.open(store.get("sdm.trade.symbol", state.symbol)));
   connectLive();
   onLive("news", (d) => {
-    Notify.notify({ title: `${d.count} nouveau${d.count > 1 ? "x" : ""} titre${d.count > 1 ? "s" : ""} dans les actualités`, body: d.latest?.[0]?.title || "", kind: "news", browser: true });
+    // Pop-up seulement si une nouvelle actu concerne un actif favori.
+    const hit = (d.latest || []).map((n) => ({ n, s: relatedAssets(n.title).find((s) => Browser.isFav(s)) })).find((x) => x.s);
+    if (hit) Notify.notify({ title: `Actu sur ${KNOWN.get(hit.s) || hit.s}`, body: hit.n.title, kind: "news", symbol: hit.s, browser: true });
+    else Notify.notify({ title: `${d.count} nouveau${d.count > 1 ? "x" : ""} titre${d.count > 1 ? "s" : ""} dans les actualités`, body: d.latest?.[0]?.title || "", kind: "news" });
     loadNews();
   });
   renderMiniCal(); setInterval(renderMiniCal, 10 * 60 * 1000);
