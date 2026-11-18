@@ -10,6 +10,7 @@ import { burst } from "./fx.js";
 import { assetVisual, topicOf, topicVisual, TOPICS } from "./visuals.js";
 import * as Quiz from "./quiz.js";
 import * as RT from "./realtime.js";
+import * as Demo from "./demo.js";
 import { lexiqueBlock } from "./lexique.js";
 import * as Predictions from "./predictions.js";
 import * as Entreprise from "./entreprise.js";
@@ -31,29 +32,35 @@ const displayName = () => KNOWN.get(state.symbol) || state.name || state.symbol;
 
 /* ───────── Navigation ───────── */
 // Rubriques principales ; "infos" regroupe actualités, calendrier et prédictions.
-const SECTIONS = ["marches", "actus", "calendrier", "predictions", "entreprise", "journal", "academie"];
+const SECTIONS = ["marches", "actus", "calendrier", "predictions", "entreprise", "compte", "journal", "academie"];
 const INFOS = ["actus", "calendrier", "predictions"];
+const COMPTE = { demo: "compte", journal: "journal" };
 const scrollMemo = {};
 let currentKey = null;
 function resolve() {
   let [view, sub] = location.hash.replace("#", "").split("/");
   if (INFOS.includes(view)) { sub = view; view = "infos"; }              // anciens liens (#actus, #calendrier…)
   if (view === "infos") { if (!INFOS.includes(sub)) sub = store.get("sdm.infos", "actus"); store.set("sdm.infos", sub); return { nav: "infos", section: sub, sub }; }
-  if (!["marches", "entreprise", "journal", "academie"].includes(view)) view = "marches";
+  if (view === "journal") { view = "compte"; sub = "journal"; }
+  if (view === "compte") { if (!COMPTE[sub]) sub = store.get("sdm.compte", "demo"); store.set("sdm.compte", sub); return { nav: "compte", section: COMPTE[sub], sub }; }
+  if (!["marches", "entreprise", "academie"].includes(view)) view = "marches";
   return { nav: view, section: view, sub };
 }
 function route() {
   const { nav, section, sub } = resolve();
-  const key = nav === "infos" ? "infos/" + section : nav;
+  const key = nav === "infos" || nav === "compte" ? nav + "/" + section : nav;
   if (currentKey) scrollMemo[currentKey] = scrollY;
   const apply = () => {
     for (const id of SECTIONS) $("view-" + id).hidden = id !== section;
     $("infos-tabs").hidden = nav !== "infos";
+    $("compte-tabs").hidden = nav !== "compte";
+    document.querySelectorAll("#compte-tabs a").forEach((a) => a.classList.toggle("on", COMPTE[a.dataset.sub] === section));
     document.querySelectorAll(".tabs a").forEach((a) => { const on = a.dataset.view === nav; a.classList.toggle("on", on); on ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"); });
     document.querySelectorAll("#infos-tabs a").forEach((a) => a.classList.toggle("on", a.dataset.sub === section));
     if (section === "marches") requestAnimationFrame(() => charts.forEach((c) => c.timeScale().applyOptions({})));
     if (section === "calendrier") Calendar.show();
     if (section === "journal") Journal.show();
+    if (section === "compte") Demo.show();
     if (section === "predictions") Predictions.show();
     if (section === "entreprise") Entreprise.show(sub ? decodeURIComponent(sub) : state.symbol);
     if (section === "actus") renderNews();
@@ -210,6 +217,7 @@ function renderQuote(prevPrice) {
   $("q-name").textContent = displayName();
   if ($("q-visual").dataset.s !== state.symbol) { $("q-visual").replaceChildren(assetVisual(state.symbol, displayName(), 48)); $("q-visual").dataset.s = state.symbol; }
   $("q-sym").textContent = state.symbol;
+  favLabel();
   $("q-company").hidden = assetClass(state.symbol) !== "action";
   $("q-px").textContent = fmt(price);
   $("q-chg").textContent = `${pct(price / ref - 1)}  ${price - ref >= 0 ? "+" : ""}${fmt(price - ref)}`;
@@ -340,7 +348,10 @@ function applyBars(newBars) {
 
 $("q-company").addEventListener("click", () => ctx.company(state.symbol));
 $("q-alert").addEventListener("click", () => state.A && Notify.alertForm({ symbol: state.symbol, name: displayName(), price: state.A.last }));
-$("q-trade").addEventListener("click", () => { location.hash = "journal"; });
+$("q-trade").addEventListener("click", () => { location.hash = "compte/journal"; });
+const favLabel = () => { $("q-fav").textContent = Browser.isFav(state.symbol) ? "★ Suivi" : "☆ Suivre"; };
+$("q-fav").addEventListener("click", () => { const on = Browser.toggleFav(state.symbol); favLabel(); Notify.notify({ title: on ? `${displayName()} ajouté à ton suivi` : `${displayName()} retiré de ton suivi`, kind: "info", popup: true }); });
+$("q-buy").addEventListener("click", () => state.A && Demo.buyForm({ symbol: state.symbol, name: displayName(), price: state.A.last, currency: state.data?.meta?.currency || "EUR" }));
 
 async function renderMiniCal() {
   const evs = await Calendar.upcoming(4);
@@ -560,7 +571,7 @@ $("overlays").querySelectorAll("button").forEach((b) => b.classList.toggle("on",
   renderTicker();
   Notify.init({ open: (s) => ctx.open(s) });
   Browser.init(ctx); browserReady = true;
-  Predictions.init(ctx); Entreprise.init(ctx); Calendar.init(ctx); Journal.init(ctx);
+  Predictions.init(ctx); Entreprise.init(ctx); Calendar.init(ctx); Journal.init(ctx); Demo.init(ctx);
   connectLive();
   onLive("news", (d) => {
     Notify.notify({ title: `${d.count} nouveau${d.count > 1 ? "x" : ""} titre${d.count > 1 ? "s" : ""} dans les actualités`, body: d.latest?.[0]?.title || "", kind: "news", browser: true });

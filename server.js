@@ -37,6 +37,55 @@ app.post("/api/predictions/run", (req, res) => {
   runCycle(); res.json({ ok: true });
 });
 
+// Contrôle de santé : teste chaque source de données (résultat gardé 1 minute).
+let health = { at: 0, value: null };
+app.get("/api/health", async (req, res) => {
+  if (health.value && Date.now() - health.at < 60e3) return res.json(health.value);
+  const t = (p, ms = 15000) => Promise.race([p, new Promise((_, r) => setTimeout(() => r(new Error("trop lent (plus de " + ms / 1000 + " s)")), ms))]);
+  const check = async (id, label, fn) => {
+    const t0 = Date.now();
+    try { const detail = await t(fn()); return { id, label, ok: true, detail, ms: Date.now() - t0 }; }
+    catch (e) { return { id, label, ok: false, detail: e.message, ms: Date.now() - t0 }; }
+  };
+  const checks = await Promise.all([
+    check("cours", "Cours en direct (Yahoo Finance)", async () => {
+      const c = await chart("^FCHI", "1d", true);
+      const age = Math.round((Date.now() / 1000 - c.bars.at(-1).time) / 60);
+      return `CAC 40 à ${c.meta.price?.toFixed(2)} (dernière bougie il y a ${age} min)`;
+    }),
+    check("recherche", "Recherche d'actifs", async () => `${(await search("lvmh")).length} résultats pour « lvmh »`),
+    check("actus", "Actualités (8 journaux)", async () => {
+      const n = await allNews();
+      const ok = n.status.filter((s) => s.ok).length;
+      if (!ok) throw new Error("aucune source ne répond");
+      return `${ok}/${n.status.length} sources OK, ${n.items.length} titres` + (ok < n.status.length ? ` (en panne : ${n.status.filter((s) => !s.ok).map((s) => s.label).join(", ")})` : "");
+    }),
+    check("actus-actif", "Actus par actif", async () => `${(await assetNews("CAC 40")).items.length} titres pour le CAC 40`),
+    check("bilans", "Bilans et prévisionnels", async () => {
+      const f = await fundamentals("AAPL");
+      if (!f.years.length && !f.forecasts?.estimates?.length) throw new Error("données vides");
+      return `Apple : ${f.years.length} années de comptes, ${f.forecasts?.estimates?.length || 0} prévisions` + (f.partial ? " (partiel)" : "");
+    }),
+    check("calendrier", "Calendrier économique", async () => {
+      const c = await calendar();
+      if (!c.events.length) throw new Error((c.errors || []).join(" ; ") || "aucun événement");
+      return `${c.events.length} événements` + (c.errors?.length ? ` (problème : ${c.errors.join(" ; ")})` : "");
+    }),
+    check("predictions", "Prédictions en continu", async () => {
+      const p = predictionsSnapshot();
+      if (!p.predictions.length) throw new Error(p.running ? "premier calcul en cours" : "aucune prédiction pour l'instant");
+      return `${p.predictions.length} prédictions, modèle : ${p.model === "claude" ? "Claude" : "gratuit"}, dernière mise à jour ${p.lastRun ? new Date(p.lastRun).toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris" }) : "—"}`;
+    }),
+    check("claude", "Clé API Claude", async () => {
+      const k = await checkKey();
+      if (k !== "valide") throw new Error("clé " + k);
+      return "clé valide";
+    }),
+  ]);
+  health = { at: Date.now(), value: { checkedAt: new Date().toISOString(), ok: checks.every((c) => c.ok), checks } };
+  res.json(health.value);
+});
+
 // Calendrier des événements à venir.
 app.get("/api/calendar", wrap(() => calendar()));
 

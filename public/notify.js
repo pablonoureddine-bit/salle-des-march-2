@@ -125,6 +125,7 @@ function welcome() {
       el("li", null, el("b", null, "Marchés : "), "choisis une famille (indices, actions, crypto…) puis un actif pour voir son graphique et son analyse."),
       el("li", null, el("b", null, "Prédictions : "), "les prévisions à 1–5 séances, mises à jour en continu, avec leur taux de réussite."),
       el("li", null, el("b", null, "Calendrier : "), "les annonces économiques et résultats d'entreprises à venir."),
+      el("li", null, el("b", null, "Compte démo : "), "entraîne-toi avec 10 000 € fictifs aux vrais cours, sans risque."),
       el("li", null, el("b", null, "Journal : "), "note tes trades et suis tes performances."),
       el("li", null, el("b", null, "La cloche 🔔 : "), "tes notifications et alertes de prix.")),
     el("div", { class: "modal-actions" }, el("button", { class: "primary", onclick: () => modal.remove() }, "C'est parti"))));

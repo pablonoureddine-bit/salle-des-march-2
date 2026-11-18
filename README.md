@@ -9,6 +9,9 @@ Outil de support pour traders, en français :
 - **Anticipations par Claude** : trois scénarios chiffrés (haussier, central, baissier) à partir des indicateurs et des derniers titres de presse.
 - **Marchés** : onglets par famille de titres (indices du monde entier, actions, crypto, devises, matières premières, taux), cartes avec logo ou drapeau, cours et mini-courbe rafraîchis toutes les 20 secondes.
 - **Calendrier** : annonces économiques de la semaine et de la suivante (inflation, emploi, banques centrales…) et publications de résultats, avec rappel 15 minutes avant les annonces à fort impact.
+- **Compte démo** : 10 000 € fictifs pour acheter et vendre aux cours du moment, valeur du compte et gains ou pertes en direct, conversion automatique en euros.
+- **Mon suivi** : mur des actifs favoris (★) avec courbe en direct, rafraîchi toutes les 5 secondes.
+- **État du site** : la page `/statut.html` teste chaque source de données et la clé Claude.
 - **Journal de trading** : saisie des trades, résultat, gain en R, taux de réussite et courbe des résultats (enregistré dans le navigateur).
 - **Notifications** : centre de notifications, pop-ups, alertes de prix et notifications du navigateur ; animations de gain et de perte (désactivables).
 - **Prédictions en continu** : sans clé payante, un modèle automatique gratuit (70 % indicateurs techniques, 30 % ton des actus) les recalcule toutes les 15 minutes. Avec une clé Anthropic, toutes les heures, Claude relit les actus et les indicateurs de 15 actifs et met à jour sa prédiction à 1–5 séances. Les navigateurs ouverts la reçoivent en direct. Chaque prédiction est jugée après 7 jours pour afficher un taux de réussite réel.

@@ -6,6 +6,8 @@
 <title>Invest Zoo</title>
 <meta name="description" content="Cours, prédictions, bilans d'entreprises, calendrier économique, journal de trading et académie.">
 <meta name="theme-color" content="#0B1A33">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="styles.css">
@@ -13,12 +15,12 @@
 <body>
 <header class="bar">
   <div class="bar-in">
-    <a class="logo" href="#marches" aria-label="Invest Zoo, accueil"><span class="logo-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><ellipse cx="12" cy="15.5" rx="4.6" ry="3.9" fill="currentColor"/><ellipse cx="6" cy="10.5" rx="1.9" ry="2.4" fill="currentColor"/><ellipse cx="18" cy="10.5" rx="1.9" ry="2.4" fill="currentColor"/><ellipse cx="9.3" cy="6.2" rx="1.8" ry="2.4" fill="currentColor"/><ellipse cx="14.7" cy="6.2" rx="1.8" ry="2.4" fill="currentColor"/></svg></span><span>Invest <b>Zoo</b></span></a>
+    <a class="logo" href="#marches" aria-label="Invest Zoo, accueil"><img class="logo-mark" src="logo.svg" alt="" width="34" height="34"><span>Invest <b>Zoo</b></span></a>
     <nav class="tabs" aria-label="Sections">
       <a href="#marches" data-view="marches"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 17l5-5 4 3 8-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 7h5v5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Marchés</span></a>
       <a href="#infos" data-view="infos"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Infos</span></a>
       <a href="#entreprise" data-view="entreprise"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 20V8l6-4v16M10 20V10h10v10M3 20h18M13 13h4M13 16h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg><span>Entreprises</span></a>
-      <a href="#journal" data-view="journal"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6zM6 3v18M10 8h5M10 12h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Journal</span></a>
+      <a href="#compte" data-view="compte"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 12h5M4 9h16" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="12" r="1.2" fill="currentColor"/></svg><span>Compte</span></a>
       <a href="#academie" data-view="academie"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Académie</span></a>
     </nav>
     <div class="bar-tools">
@@ -43,6 +45,26 @@
     <a href="#infos/calendrier" data-sub="calendrier"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Calendrier</span></a>
     <a href="#infos/predictions" data-sub="predictions"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 21h8M12 18v3M9 9a3 3 0 0 1 3-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Prédictions</span></a>
   </nav>
+  <nav class="subnav" id="compte-tabs" aria-label="Compte" hidden>
+    <a href="#compte/demo" data-sub="demo"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 12h5M4 9h16" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="12" r="1.2" fill="currentColor"/></svg><span>Compte démo</span></a>
+    <a href="#compte/journal" data-sub="journal"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6zM6 3v18M10 8h5M10 12h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Journal de trading</span></a>
+  </nav>
+
+  <!-- ───────── COMPTE DÉMO ───────── -->
+  <section class="view" id="view-compte" hidden>
+    <div class="page-head">
+      <div><div class="eyebrow">Argent fictif · vrais cours</div><h1>Compte démo</h1></div>
+      <button class="btn-soft" data-demo-reset>Recommencer avec 10 000 €</button>
+    </div>
+    <p class="lead">Entraîne-toi sans risque : tu disposes de 10 000 € fictifs pour acheter et vendre actions, indices, cryptos ou matières premières aux cours du moment. Ton compte évolue en direct, à la hausse comme à la baisse.</p>
+    <section class="demo-hero" id="demo-hero"></section>
+    <div class="compte-grid">
+      <section class="panel"><div class="panel-head"><h2>Mes positions</h2><span class="muted small">mise à jour toutes les 5 secondes</span></div><div class="dp-list" id="demo-positions"></div></section>
+      <section class="panel"><div class="panel-head"><h2>Historique</h2></div><ul class="dh-list" id="demo-history"></ul></section>
+    </div>
+    <p class="disclaimer">Compte d'entraînement avec de l'argent fictif. Les résultats obtenus ici ne garantissent en rien ceux que tu obtiendrais avec de l'argent réel : frais, délais d'exécution et émotions changent beaucoup de choses. Investir comporte un risque de perte en capital.</p>
+  </section>
+
   <!-- ───────── MARCHÉS ───────── -->
   <section class="view" id="view-marches">
     <div class="families" id="families" role="tablist" aria-label="Familles de titres"></div>
@@ -63,6 +85,8 @@
         <span class="chip big" id="q-chg"></span>
       </div>
       <div class="q-actions">
+        <button class="primary" id="q-buy">Acheter (démo)</button>
+        <button class="btn-soft" id="q-fav">☆ Suivre</button>
         <button class="btn-soft" id="q-alert">🔔 Créer une alerte</button>
         <button class="btn-soft" id="q-trade">Noter un trade</button>
         <button class="btn-soft" id="q-company" hidden>Fiche entreprise</button>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>État du site · Invest Zoo</title>
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+  :root { --bg: #F2F4F8; --panel: #fff; --ink: #0E1A2F; --muted: #5F6B80; --line: #E2E7EF; --up: #15936A; --down: #D2454F; --up-soft: #E2F4EC; --down-soft: #FBE6E7; --navy: #0B1A33; --accent: #D9A441; color-scheme: light; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0A1324; --panel: #111D33; --ink: #E7ECF5; --muted: #8E9AB2; --line: #22314D; --up: #34C98F; --down: #FF6B73; --up-soft: #103A2E; --down-soft: #3D1A22; color-scheme: dark; } }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 Inter, system-ui, sans-serif; }
+  header { background: var(--navy); color: #E9EEF7; padding: 16px max(16px, env(safe-area-inset-left)); display: flex; align-items: center; gap: 12px; }
+  header img { width: 36px; height: 36px; }
+  header a { color: #E9EEF7; text-decoration: none; font: 700 18px Sora, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; display: grid; gap: 16px; }
+  h1 { font: 700 26px Sora, sans-serif; margin: 0; }
+  .sum { padding: 16px 18px; border-radius: 14px; font-weight: 600; }
+  .sum.ok { background: var(--up-soft); color: var(--up); } .sum.ko { background: var(--down-soft); color: var(--down); }
+  ul { list-style: none; margin: 0; padding: 0; background: var(--panel); border-radius: 14px; overflow: hidden; box-shadow: 0 6px 20px rgb(0 0 0 / .06); }
+  li { display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; padding: 14px 16px; border-top: 1px solid var(--line); align-items: start; }
+  li:first-child { border-top: 0; }
+  .dot { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 13px; margin-top: 1px; }
+  .ok .dot { background: var(--up); } .ko .dot { background: var(--down); }
+  li b { display: block; } li small { color: var(--muted); }
+  .ms { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  button { font: inherit; font-weight: 600; border: 0; border-radius: 10px; padding: 10px 16px; background: var(--accent); color: #1B1405; cursor: pointer; justify-self: start; }
+  p { margin: 0; color: var(--muted); }
+</style>
+</head>
+<body>
+<header><img src="logo.svg" alt=""><a href="/">Invest Zoo</a></header>
+<main>
+  <h1>État du site</h1>
+  <p>Cette page teste en direct chaque source de données du site.</p>
+  <div class="sum" id="sum">Test en cours… (jusqu'à 20 secondes)</div>
+  <ul id="list"></ul>
+  <button id="again" type="button">Relancer le test</button>
+  <p id="when"></p>
+</main>
+<script>
+async function run() {
+  document.getElementById("sum").className = "sum"; document.getElementById("sum").textContent = "Test en cours… (jusqu'à 20 secondes)";
+  try {
+    const r = await fetch("/api/health"); const d = await r.json();
+    const bad = d.checks.filter((c) => !c.ok).length;
+    const sum = document.getElementById("sum");
+    sum.className = "sum " + (bad ? "ko" : "ok");
+    sum.textContent = bad ? `${bad} élément${bad > 1 ? "s" : ""} sur ${d.checks.length} ne fonctionne${bad > 1 ? "nt" : ""} pas` : "Tout fonctionne ✓";
+    document.getElementById("list").replaceChildren(...d.checks.map((c) => {
+      const li = document.createElement("li"); li.className = c.ok ? "ok" : "ko";
+      const dot = document.createElement("span"); dot.className = "dot"; dot.textContent = c.ok ? "✓" : "!";
+      const txt = document.createElement("div"); const b = document.createElement("b"); b.textContent = c.label; const s = document.createElement("small"); s.textContent = c.detail; txt.append(b, s);
+      const ms = document.createElement("span"); ms.className = "ms"; ms.textContent = (c.ms / 1000).toFixed(1).replace(".", ",") + " s";
+      li.append(dot, txt, ms); return li;
+    }));
+    document.getElementById("when").textContent = "Testé le " + new Date(d.checkedAt).toLocaleString("fr-FR") + ". Le résultat est gardé une minute.";
+  } catch (e) {
+    document.getElementById("sum").className = "sum ko"; document.getElementById("sum").textContent = "Le serveur ne répond pas : " + e.message;
+  }
+}
+document.getElementById("again").onclick = run;
+run();
+</script>
+</body>
+</html>
