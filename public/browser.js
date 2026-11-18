@@ -78,7 +78,7 @@ function render() {
   $("cards").replaceChildren(...f.items.map(([s, n, sub]) => {
     const q = quotes.get(s);
     const ch = q?.price != null && q.previousClose ? q.price / q.previousClose - 1 : null;
-    const card = el("button", { class: "acard" + (s === cur ? " on" : "") + (q?.moved ? " tick-" + q.moved : ""), onclick: () => ctx.select(s, n), title: `Voir ${n}` },
+    const card = el("button", { class: "acard" + (s === cur ? " on" : "") + (q?.moved ? " tick-" + q.moved : ""), onclick: () => ctx.pick(s, n), title: `Voir ${n}` },
       el("div", { class: "acard-top" }, assetVisual(s, n, 34), el("div", { class: "acard-id" }, el("b", null, n), el("small", null, sub || s))),
       el("div", { class: "acard-px" }, el("span", { class: "mono" }, q?.price != null ? fmt(q.price) : "…"), el("span", { class: "chip " + dir(ch) }, ch != null ? pct(ch) : "")),
       q?.spark?.length ? spark(q.spark, 150, 28) : el("span", { class: "spark-ph" }));
@@ -104,7 +104,7 @@ function renderWall(f, cur) {
     const q = quotes.get(s), pts = live.get(s) || [];
     const ch = q?.price != null && q.previousClose ? q.price / q.previousClose - 1 : null;
     const isLive = pts.length >= 3;
-    const open = () => ctx.select(s, n);
+    const open = () => ctx.pick(s, n);
     const card = el("div", { class: "acard wcard" + (s === cur ? " on" : "") + (q?.moved ? " tick-" + q.moved : ""), role: "button", tabindex: "0", title: `Voir ${n}`, onclick: open, onkeydown: (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), open()) },
       el("div", { class: "acard-top" }, assetVisual(s, n, 40), el("div", { class: "acard-id" }, el("b", null, n), el("small", null, s)),
         el("button", { class: "wfav", title: "Retirer du suivi", "aria-label": `Retirer ${n} du suivi`, onclick: (e) => { e.stopPropagation(); toggleFav(s); } }, "★")),

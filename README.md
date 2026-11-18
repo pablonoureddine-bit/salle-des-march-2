@@ -10,6 +10,8 @@ Outil de support pour traders, en français :
 - **Marchés** : onglets par famille de titres (indices du monde entier, actions, crypto, devises, matières premières, taux), cartes avec logo ou drapeau, cours et mini-courbe rafraîchis toutes les 20 secondes.
 - **Calendrier** : annonces économiques de la semaine et de la suivante (inflation, emploi, banques centrales…) et publications de résultats, avec rappel 15 minutes avant les annonces à fort impact.
 - **Trader** : acheter ou vendre en quelques clics (compte démo), graphique en direct avec bougies d'une minute, prix qui défile, stop loss et take profit avec la perte ou le gain en euros affichés avant de valider, volume calculé automatiquement.
+- **Graphique plein écran** : bouton ⤢ sur chaque graphique ; sur téléphone, toucher un actif l'ouvre directement en plein écran, avec Acheter / Vendre en bas et retour par le bouton « précédent ».
+- **Actifs liés aux actus** : sous chaque titre, les actifs concernés avec leur variation du jour, un toucher ouvre le graphique.
 - **Bourses ouvertes maintenant** : horaires en direct de 13 places (Océanie, Asie, Europe, Amériques) ; badge « Marché ouvert / fermé » sur chaque actif.
 - **Compte démo** : 10 000 € fictifs pour acheter et vendre aux cours du moment, valeur du compte et gains ou pertes en direct, conversion automatique en euros.
 - **Mon suivi** : mur des actifs favoris (★) avec courbe en direct, rafraîchi toutes les 5 secondes.

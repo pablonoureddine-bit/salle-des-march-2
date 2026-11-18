@@ -13,6 +13,8 @@ import * as RT from "./realtime.js";
 import * as Demo from "./demo.js";
 import * as Trader from "./trader.js";
 import * as Sessions from "./sessions.js";
+import * as FullChart from "./fullchart.js";
+import { relatedAssets } from "./related.js";
 import { lexiqueBlock } from "./lexique.js";
 import * as Predictions from "./predictions.js";
 import * as Entreprise from "./entreprise.js";
@@ -63,7 +65,7 @@ function route() {
     if (section === "calendrier") Calendar.show();
     if (section === "journal") Journal.show();
     if (section === "compte") Demo.show();
-    if (section === "trader") Trader.show(pendingTrade?.[0], pendingTrade?.[1]); else Trader.hide();
+    if (section === "trader") Trader.show(pendingTrade?.[0], pendingTrade?.[1], pendingTrade?.[2]); else Trader.hide();
     pendingTrade = null;
     if (section === "predictions") Predictions.show();
     if (section === "entreprise") Entreprise.show(sub ? decodeURIComponent(sub) : state.symbol);
@@ -83,7 +85,11 @@ const ctx = {
   company(symbol) { location.hash = "entreprise/" + encodeURIComponent(symbol); },
   // Depuis les cartes de la page Marchés : on reste sur la page et on remonte jusqu'au graphique.
   select(symbol, name) { loadSymbol(symbol, name); $("quote-box").scrollIntoView({ behavior: "smooth", block: "start" }); },
-  trade(symbol, name) { pendingTrade = [symbol, name]; if (location.hash === "#trader") route(); else location.hash = "trader"; },
+  trade(symbol, name, side) { pendingTrade = [symbol, name, side]; if (location.hash === "#trader") route(); else location.hash = "trader"; },
+  // Graphique en plein écran.
+  full(symbol, name) { FullChart.open(symbol, name); },
+  // Sur téléphone, toucher un actif ouvre directement son graphique en plein écran.
+  pick(symbol, name) { if (matchMedia("(max-width: 760px)").matches) FullChart.open(symbol, name); else this.select(symbol, name); },
   currentSymbol: () => state.symbol,
   currentPrice: () => state.A?.last,
   config: () => state.config,
@@ -385,10 +391,26 @@ $("overlays").addEventListener("click", (e) => {
 });
 
 /* ───────── Actualités ───────── */
-const newsItem = (n, size = 36) => { const t = topicOf(n.title); return el("li", null, topicVisual(t, size),
+const newsItem = (n, size = 36) => { const t = topicOf(n.title); const rel = relatedAssets(n.title, size > 40 ? 4 : 3); return el("li", null, topicVisual(t, size),
   el("div", null,
     el("a", { href: n.link, target: "_blank", rel: "noopener noreferrer" }, n.title),
-    el("span", { class: "meta" }, el("span", { class: "src" }, n.source), el("span", null, ago(n.date)), size > 40 ? el("span", { class: "topic" }, t.label) : null))); };
+    el("span", { class: "meta" }, el("span", { class: "src" }, n.source), el("span", null, ago(n.date)), size > 40 ? el("span", { class: "topic" }, t.label) : null),
+    rel.length ? el("div", { class: "rel" }, rel.map((s) => el("button", { class: "rel-chip", "data-rel": s, title: `Voir le graphique de ${KNOWN.get(s) || s}`, onclick: () => FullChart.open(s) },
+      assetVisual(s, KNOWN.get(s) || s, 18), el("span", null, KNOWN.get(s) || s), el("b", { class: "mono" }, relQuotes.get(s)?.txt || "")))) : null)); };
+
+// Variation du jour des actifs cités sous les actus (rafraîchie au plus toutes les 30 s).
+const relQuotes = new Map();
+async function fillRelated(root) {
+  const syms = [...new Set([...root.querySelectorAll("[data-rel]")].map((b) => b.dataset.rel))];
+  const need = syms.filter((s) => !relQuotes.has(s) || Date.now() - relQuotes.get(s).at > 30000).slice(0, 80);
+  if (need.length) {
+    try {
+      const res = await api("/api/quotes?symbols=" + encodeURIComponent(need.join(",")));
+      for (const q of res) if (q.price != null && q.previousClose) { const ch = q.price / q.previousClose - 1; relQuotes.set(q.symbol, { at: Date.now(), ch, txt: pct(ch) }); }
+    } catch {}
+  }
+  root.querySelectorAll("[data-rel]").forEach((b) => { const q = relQuotes.get(b.dataset.rel); if (!q) return; const v = b.querySelector("b"); v.textContent = q.txt; b.className = "rel-chip " + dir(q.ch); });
+}
 
 async function loadAssetNews() {
   const name = displayName();
@@ -401,6 +423,7 @@ async function loadAssetNews() {
   $("asset-news").replaceChildren(...(list.length ? list.map((n) => newsItem(n)) : [el("li", { class: "muted" }, "Aucune actu récente trouvée pour " + name + ".")]));
   $("news-asset-title").textContent = "Sur " + name;
   $("news-asset").replaceChildren(...(state.assetNews.length ? state.assetNews.slice(0, 20).map((n) => newsItem(n)) : [el("li", { class: "muted" }, "Aucune actu récente.")]));
+  fillRelated($("asset-news")); fillRelated($("news-asset"));
 }
 
 let newsSource = "all", newsTopic = "all";
@@ -421,6 +444,7 @@ function renderNews() {
   const f = $("news-filter").value.trim().toLowerCase();
   const items = d.items.filter((n) => (newsSource === "all" || n.sourceId === newsSource) && (newsTopic === "all" || topicOf(n.title).id === newsTopic) && (!f || n.title.toLowerCase().includes(f))).slice(0, 120);
   $("news-list").replaceChildren(...(items.length ? items.map((n) => newsItem(n, 56)) : [el("li", { class: "muted" }, d.error ? "Actualités indisponibles : " + d.error : "Aucun titre ne correspond.")]));
+  fillRelated($("news-list"));
 }
 $("news-filter").addEventListener("input", renderNews);
 
@@ -579,7 +603,9 @@ $("overlays").querySelectorAll("button").forEach((b) => b.classList.toggle("on",
   renderTicker();
   Notify.init({ open: (s) => ctx.open(s) });
   Browser.init(ctx); browserReady = true;
-  Predictions.init(ctx); Entreprise.init(ctx); Calendar.init(ctx); Journal.init(ctx); Demo.init(ctx); Trader.init(ctx); Sessions.init(ctx);
+  Predictions.init(ctx); Entreprise.init(ctx); Calendar.init(ctx); Journal.init(ctx); Demo.init(ctx); Trader.init(ctx); Sessions.init(ctx); FullChart.init(ctx);
+  $("chart-full").addEventListener("click", () => FullChart.open(state.symbol, displayName()));
+  $("tr-full").addEventListener("click", () => FullChart.open(store.get("sdm.trade.symbol", state.symbol)));
   connectLive();
   onLive("news", (d) => {
     Notify.notify({ title: `${d.count} nouveau${d.count > 1 ? "x" : ""} titre${d.count > 1 ? "s" : ""} dans les actualités`, body: d.latest?.[0]?.title || "", kind: "news", browser: true });

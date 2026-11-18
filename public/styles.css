@@ -622,3 +622,50 @@ main.wrap { display: grid; gap: 18px; align-content: start; }
 .tr-go.buy { background: var(--up); } .tr-go.sell { background: var(--down); }
 .tr-go:hover { filter: brightness(1.07); }
 .dh-cta { margin-top: 14px; }
+
+/* ───────── Actifs liés aux actus ───────── */
+.rel { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.rel-chip { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 2px 9px 2px 3px; font-size: 12px; background: var(--soft); border-color: transparent; }
+.rel-chip .av { border-radius: 50%; }
+.rel-chip b { font-weight: 500; font-size: 11px; }
+.rel-chip.up b { color: var(--up); } .rel-chip.down b { color: var(--down); }
+.rel-chip:hover { border-color: var(--accent); }
+
+/* ───────── Graphique plein écran ───────── */
+.full-btn { font-size: 13px; padding: 5px 11px; }
+body.fcv-open { overflow: hidden; }
+.fcv { position: fixed; inset: 0; z-index: 90; background: var(--panel); display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; animation: fcv-in .22s ease-out;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+@keyframes fcv-in { from { opacity: 0; transform: translateY(24px); } }
+@media (prefers-reduced-motion: reduce) { .fcv { animation: none; } }
+.fcv-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.fcv-back, .fcv-max { width: 40px; height: 40px; border-radius: 12px; font-size: 20px; padding: 0; display: grid; place-items: center; background: var(--soft); border: 0; }
+.fcv-max { margin-left: auto; }
+.fcv-id { display: grid; min-width: 0; }
+.fcv-id b { font-family: var(--font-display); font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fcv-sub { display: flex; align-items: center; gap: 8px; }
+.fcv-price { font-size: 20px; font-weight: 600; }
+.fcv-bar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; flex-wrap: wrap; }
+.fcv-tf { overflow-x: auto; flex-wrap: nowrap; max-width: 100%; }
+.fcv-tf button { white-space: nowrap; }
+.fcv-chart { min-height: 0; width: 100%; height: 100%; }
+.fcv-foot { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--line); }
+.fcv-foot button { padding: 14px; font-size: 16px; font-weight: 700; border-radius: 14px; border: 0; }
+.fcv-sell { background: var(--down); color: #fff; } .fcv-buy { background: var(--up); color: #fff; }
+.fcv-more { background: var(--soft); }
+.fcv:fullscreen { padding: 0; }
+
+/* ───────── Téléphone : liste épurée des actifs ───────── */
+@media (max-width: 760px) {
+  .cards, .cards.wall { grid-template-columns: minmax(0, 1fr); gap: 0; background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .cards .acard { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 10px; border-radius: 0; box-shadow: none; border: 0; border-top: 1px solid var(--line); padding: 12px 14px; transform: none; }
+  .cards .acard:first-child { border-top: 0; }
+  .cards .acard.on { box-shadow: inset 3px 0 0 var(--accent); }
+  .cards .acard svg, .cards .spark-ph, .cards .wlabel { display: none; }
+  .cards .acard-px { flex-direction: column; align-items: flex-end; gap: 3px; }
+  .cards .acard-px .mono, .cards .wcard .mono.big { font-size: 15px; }
+  .cards .wcard .acard-top { gap: 10px; }
+  .cards .wfav { order: -1; margin: 0; font-size: 16px; }
+  .cards .empty { box-shadow: none; }
+  #quote-box { scroll-margin-top: 140px; }
+}

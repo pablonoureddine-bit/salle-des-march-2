@@ -81,7 +81,7 @@
         <div class="tr-head">
           <span id="tr-visual"></span>
           <div><h1 id="tr-name">—</h1><span class="muted mono small" id="tr-sym"></span></div>
-          <div class="tr-px"><span class="mono" id="tr-price">—</span><span class="chip big" id="tr-chg"></span></div>
+          <div class="tr-px"><span class="mono" id="tr-price">—</span><span class="chip big" id="tr-chg"></span><button class="btn-soft full-btn" id="tr-full" title="Afficher le graphique en plein écran" aria-label="Plein écran">⤢</button></div>
         </div>
         <div class="tr-status"><span class="mkt" id="tr-market"></span><span class="muted small" id="tr-session"></span><span class="live-dot" id="tr-live"></span><span class="muted small" id="tr-time"></span></div>
         <p class="tr-closed" id="tr-closed" hidden>Ce marché est fermé : le prix ne bougera qu'à la prochaine ouverture. Les cryptos, elles, s'échangent 24h/24.</p>
@@ -151,6 +151,7 @@
           <div class="seg" id="tf" role="group" aria-label="Unité de temps">
             <button data-tf="1m">Direct</button><button data-tf="15m">15 min</button><button data-tf="1h">1 h</button><button data-tf="1d" class="on">1 jour</button><button data-tf="1wk">1 sem.</button>
           </div>
+          <button class="btn-soft full-btn" id="chart-full" title="Afficher le graphique en plein écran">⤢ Plein écran</button>
           <div class="seg" id="overlays" role="group" aria-label="Calques">
             <button data-ov="mm" class="on">Moyennes</button><button data-ov="bollinger">Bollinger</button><button data-ov="ichimoku">Ichimoku</button><button data-ov="fibonacci">Fibonacci</button><button data-ov="levels" class="on">Niveaux</button>
           </div>

@@ -38,8 +38,9 @@ export function init(c) {
   Demo.onChange(() => { if (!$("view-trader").hidden) { renderPositions(); renderTicket(); drawLines(); } });
 }
 
-export function show(symbol, name) {
+export function show(symbol, name, side) {
   if (symbol) { S.symbol = symbol; S.name = name || KNOWN.get(symbol) || symbol; }
+  if (side) S.side = side;
   load();
 }
 export function hide() { stopRT?.(); stopRT = null; clearInterval(pollTimer); }
