@@ -28,20 +28,41 @@ const state = {
 const displayName = () => KNOWN.get(state.symbol) || state.name || state.symbol;
 
 /* ───────── Navigation ───────── */
-const VIEWS = ["marches", "predictions", "entreprise", "calendrier", "actus", "journal", "academie"];
+// Rubriques principales ; "infos" regroupe actualités, calendrier et prédictions.
+const SECTIONS = ["marches", "actus", "calendrier", "predictions", "entreprise", "journal", "academie"];
+const INFOS = ["actus", "calendrier", "predictions"];
+const scrollMemo = {};
+let currentKey = null;
+function resolve() {
+  let [view, sub] = location.hash.replace("#", "").split("/");
+  if (INFOS.includes(view)) { sub = view; view = "infos"; }              // anciens liens (#actus, #calendrier…)
+  if (view === "infos") { if (!INFOS.includes(sub)) sub = store.get("sdm.infos", "actus"); store.set("sdm.infos", sub); return { nav: "infos", section: sub, sub }; }
+  if (!["marches", "entreprise", "journal", "academie"].includes(view)) view = "marches";
+  return { nav: view, section: view, sub };
+}
 function route() {
-  const [view, sub] = location.hash.replace("#", "").split("/");
-  const v = VIEWS.includes(view) ? view : "marches";
-  for (const id of VIEWS) $("view-" + id).hidden = id !== v;
-  document.querySelectorAll(".tabs a").forEach((a) => a.classList.toggle("on", a.dataset.view === v));
-  if (v === "marches") requestAnimationFrame(() => charts.forEach((c) => c.timeScale().applyOptions({})));
-  if (v === "calendrier") Calendar.show();
-  if (v === "journal") Journal.show();
-  if (v === "predictions") Predictions.show();
-  if (v === "entreprise") Entreprise.show(sub ? decodeURIComponent(sub) : state.symbol);
-  if (v === "actus") renderNews();
-  if (v === "academie") renderAcademy(sub);
-  window.scrollTo({ top: 0 });
+  const { nav, section, sub } = resolve();
+  const key = nav === "infos" ? "infos/" + section : nav;
+  if (currentKey) scrollMemo[currentKey] = scrollY;
+  const apply = () => {
+    for (const id of SECTIONS) $("view-" + id).hidden = id !== section;
+    $("infos-tabs").hidden = nav !== "infos";
+    document.querySelectorAll(".tabs a").forEach((a) => { const on = a.dataset.view === nav; a.classList.toggle("on", on); on ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"); });
+    document.querySelectorAll("#infos-tabs a").forEach((a) => a.classList.toggle("on", a.dataset.sub === section));
+    if (section === "marches") requestAnimationFrame(() => charts.forEach((c) => c.timeScale().applyOptions({})));
+    if (section === "calendrier") Calendar.show();
+    if (section === "journal") Journal.show();
+    if (section === "predictions") Predictions.show();
+    if (section === "entreprise") Entreprise.show(sub ? decodeURIComponent(sub) : state.symbol);
+    if (section === "actus") renderNews();
+    if (section === "academie") renderAcademy(sub);
+    // On retrouve la position de lecture quand on revient sur une rubrique.
+    window.scrollTo({ top: key === currentKey ? scrollY : scrollMemo[key] || 0, behavior: "instant" });
+    currentKey = key;
+  };
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (document.startViewTransition && !reduced && currentKey && key !== currentKey) document.startViewTransition(apply);
+  else apply();
 }
 // Contexte partagé avec les autres vues.
 const ctx = {

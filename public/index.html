@@ -15,13 +15,11 @@
   <div class="bar-in">
     <a class="logo" href="#marches" aria-label="Accueil"><span class="logo-mark" aria-hidden="true"></span><span>Salle des marchés</span></a>
     <nav class="tabs" aria-label="Sections">
-      <a href="#marches" data-view="marches">Marchés</a>
-      <a href="#predictions" data-view="predictions">Prédictions</a>
-      <a href="#entreprise" data-view="entreprise">Entreprises</a>
-      <a href="#calendrier" data-view="calendrier">Calendrier</a>
-      <a href="#actus" data-view="actus">Actus</a>
-      <a href="#journal" data-view="journal">Journal</a>
-      <a href="#academie" data-view="academie">Académie</a>
+      <a href="#marches" data-view="marches"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 17l5-5 4 3 8-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 7h5v5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Marchés</span></a>
+      <a href="#infos" data-view="infos"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Infos</span></a>
+      <a href="#entreprise" data-view="entreprise"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 20V8l6-4v16M10 20V10h10v10M3 20h18M13 13h4M13 16h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg><span>Entreprises</span></a>
+      <a href="#journal" data-view="journal"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 3h11a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6zM6 3v18M10 8h5M10 12h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Journal</span></a>
+      <a href="#academie" data-view="academie"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5zM6 11v5c3 2 9 2 12 0v-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Académie</span></a>
     </nav>
     <div class="bar-tools">
       <div class="search">
@@ -39,6 +37,12 @@
 <div class="popups" id="popups" aria-live="polite"></div>
 
 <main class="wrap">
+  <!-- Sous-onglets de la rubrique Infos -->
+  <nav class="subnav" id="infos-tabs" aria-label="Infos" hidden>
+    <a href="#infos/actus" data-sub="actus"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 6h12v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM16 9h4v9a2 2 0 0 1-4 0M7 9h6M7 13h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg><span>Actualités</span></a>
+    <a href="#infos/calendrier" data-sub="calendrier"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Calendrier</span></a>
+    <a href="#infos/predictions" data-sub="predictions"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 21h8M12 18v3M9 9a3 3 0 0 1 3-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Prédictions</span></a>
+  </nav>
   <!-- ───────── MARCHÉS ───────── -->
   <section class="view" id="view-marches">
     <div class="families" id="families" role="tablist" aria-label="Familles de titres"></div>
@@ -99,11 +103,11 @@
           <div class="levels" id="levels"></div>
         </section>
         <section class="panel">
-          <div class="panel-head"><h2>Actus de l'actif</h2><a class="small" href="#actus">Toutes</a></div>
+          <div class="panel-head"><h2>Actus de l'actif</h2><a class="small" href="#infos/actus">Toutes</a></div>
           <ul class="news compact" id="asset-news"><li class="muted">Chargement…</li></ul>
         </section>
         <section class="panel">
-          <div class="panel-head"><h2>À venir</h2><a class="small" href="#calendrier">Calendrier</a></div>
+          <div class="panel-head"><h2>À venir</h2><a class="small" href="#infos/calendrier">Calendrier</a></div>
           <ul class="mini-cal" id="mini-cal"><li class="muted">Chargement…</li></ul>
         </section>
       </aside>

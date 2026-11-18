@@ -467,3 +467,43 @@ select, input[type=text], input[type=search], input[type=number], input[type=dat
 .lex-dia { width: 96px; height: 70px; border-radius: 12px; background: var(--soft); padding: 4px; }
 .lex-dia svg { width: 100%; height: 100%; }
 @media (max-width: 420px) { .lex-card { grid-template-columns: 1fr; } }
+
+/* ───────── Navigation avec icônes ───────── */
+.tabs a { display: inline-flex; align-items: center; gap: 7px; transition: background .2s, color .2s; }
+.tabs a svg { flex: 0 0 auto; opacity: .85; }
+.tabs a.on svg { opacity: 1; }
+.subnav { display: flex; gap: 6px; background: var(--panel); box-shadow: var(--shadow); border-radius: 16px; padding: 6px; width: fit-content; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.subnav::-webkit-scrollbar { display: none; }
+.subnav a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 11px; color: var(--muted); text-decoration: none; font-weight: 600; white-space: nowrap; transition: background .2s, color .2s; }
+.subnav a:hover { color: var(--ink); background: var(--soft); }
+.subnav a.on { background: var(--navy); color: var(--on-navy); }
+.subnav a.on svg { color: var(--accent); }
+main.wrap { display: grid; gap: 18px; align-content: start; }
+
+/* Transition douce entre les rubriques */
+::view-transition-old(root) { animation: vt-out .16s ease-in both; }
+::view-transition-new(root) { animation: vt-in .24s ease-out both; }
+@keyframes vt-out { to { opacity: 0; transform: translateY(-4px); } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { ::view-transition-old(root), ::view-transition-new(root) { animation: none; } }
+
+/* Écrans moyens : icônes seules dans le bandeau, le nom au survol */
+@media (max-width: 1100px) and (min-width: 761px) {
+  .tabs a span { display: none; }
+  .tabs a { padding: 9px 12px; }
+}
+/* Téléphone : barre d'onglets fixée en bas, comme une application */
+@media (max-width: 760px) {
+  .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; background: var(--navy); border-top: 1px solid rgb(255 255 255 / .08);
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; padding: 6px max(6px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left)); }
+  .tabs a { flex-direction: column; gap: 3px; padding: 6px 2px; font-size: 11px; border-radius: 12px; justify-content: center; }
+  .tabs a svg { width: 22px; height: 22px; }
+  .tabs a.on { background: rgb(233 185 85 / .16); color: var(--accent); }
+  .tabs a.on span { color: var(--accent); }
+  body { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+  .popups { bottom: calc(84px + env(safe-area-inset-bottom)); }
+  .toast { bottom: calc(86px + env(safe-area-inset-bottom)); }
+  .bar-tools { flex-basis: 100%; max-width: none; }
+  .subnav { width: 100%; }
+  .subnav a { flex: 1; flex-direction: column; justify-content: center; gap: 3px; padding: 8px 4px; font-size: 12px; }
+}
