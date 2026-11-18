@@ -64,7 +64,8 @@ Chaque analyse appelle Claude Opus 5.5 et coûte quelques centimes. Pour protég
 | Cours | Yahoo Finance (API publique non officielle) | Gratuit, sans clé. Selon les places, les cours peuvent avoir 15 minutes de retard. La crypto est en temps réel. |
 | Actus | Google News RSS, filtré par journal | Seuls les titres et les liens sont affichés. Les articles s'ouvrent sur le site du journal. |
 | Bilans, ratios, prévisions | Yahoo Finance (gratuit) ou Financial Modeling Prep (clé `FMP_API_KEY`) | Comptes repris des publications officielles des sociétés ; prévisions = consensus des analystes. |
-| Calendrier économique | Flux public de Forex Factory | Annonces de la semaine en cours et de la suivante. |
+| Calendrier économique | Flux public de Forex Factory | Annonces de la semaine en cours et de la suivante. Si la source ne répond pas, grandes publications américaines à leur date habituelle (marquées « à confirmer »). |
+| Comptes des sociétés américaines (secours) | SEC EDGAR (gratuit) | Rapports annuels 10-K. Variable `SEC_CONTACT` conseillée (nom de l'application + e-mail de contact). |
 | Logos et drapeaux | financialmodelingprep.com (logos), flagcdn.com (drapeaux) | Repli automatique sur un monogramme si l'image ne charge pas. |
 
 **Avant d'ouvrir l'outil au public ou de le faire payer**, remplace Yahoo Finance par un fournisseur sous licence : Twelve Data, Polygon.io, EODHD ou Financial Modeling Prep. Seul le fichier `lib/market.js` est à modifier. Pour les actus, vérifie les conditions d'utilisation de chaque source.

@@ -61,7 +61,10 @@ function render(d) {
         el("p", { class: "muted" }, [d.symbol, p.exchange, p.sector, p.industry, p.country].filter(Boolean).join(" · "))),
       el("div", { class: "ent-actions" },
         el("button", { class: "primary", onclick: () => ctx.open(d.symbol, p.name) }, "Graphique et analyse"),
-        p.website ? el("a", { class: "btn", href: p.website, target: "_blank", rel: "noopener noreferrer" }, "Site de la société ↗") : null)),
+        p.website ? el("a", { class: "btn", href: p.website, target: "_blank", rel: "noopener noreferrer" }, "Site de la société ↗") : null,
+        // Espace investisseurs : rapports annuels, présentations de résultats, assemblées générales.
+        el("a", { class: "btn", href: "https://www.google.com/search?q=" + encodeURIComponent(p.name + " relations investisseurs rapport annuel"), target: "_blank", rel: "noopener noreferrer" }, "Espace investisseurs ↗"),
+        d.secCik ? el("a", { class: "btn", href: `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${d.secCik}&type=10-K`, target: "_blank", rel: "noopener noreferrer" }, "Rapports officiels (SEC) ↗") : null)),
     el("div", { class: "kpis" },
       kpi("Capitalisation", big(p.marketCap, p.currency)),
       kpi("PER (12 mois)", ratio(r.pe)),

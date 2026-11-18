@@ -53,7 +53,7 @@ function render() {
         e.type === "earnings" ? assetVisual(e.symbol, e.title.replace("Résultats de ", ""), 28) : e.cc ? FLAG(e.cc) : el("span", { class: "cal-flag" }),
         el("div", { class: "cal-main" },
           e.type === "earnings" ? el("button", { class: "linklike", onclick: () => ctx.company(e.symbol) }, el("b", null, e.title)) : el("b", null, e.title),
-          el("small", null, [e.country, e.type === "earnings" ? "publication de résultats" : null, e.forecast ? `prévu ${e.forecast}` : null, e.previous ? `précédent ${e.previous}` : null, e.actual ? `publié ${e.actual}` : null].filter(Boolean).join(" · "))),
+          el("small", null, [e.country, e.estimated ? "date habituelle, à confirmer" : null, e.type === "earnings" ? "publication de résultats" : null, e.forecast ? `prévu ${e.forecast}` : null, e.previous ? `précédent ${e.previous}` : null, e.actual ? `publié ${e.actual}` : null].filter(Boolean).join(" · "))),
         el("span", { class: "imp", title: "Impact attendu sur les marchés" }, e.type === "earnings" ? "résultats" : "impact " + e.impact));
     })))));
 }
