@@ -4,6 +4,9 @@ import { fileURLToPath } from "node:url";
 import { chart, quotes, search, INTERVALS } from "./lib/market.js";
 import { allNews, assetNews } from "./lib/news.js";
 import { analyse, aiEnabled, Anthropic } from "./lib/ai.js";
+import { streamHandler, broadcast } from "./lib/live.js";
+import { startPredictions, snapshot as predictionsSnapshot, runCycle } from "./lib/predictions.js";
+import { fundamentals, fundamentalsEnabled } from "./lib/fundamentals.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -19,7 +22,23 @@ const wrap = (fn) => async (req, res) => {
 };
 const bad = (msg) => Object.assign(new Error(msg), { status: 400 });
 
-app.get("/api/config", (req, res) => res.json({ ai: aiEnabled(), mock: process.env.MOCK === "1", timeframes: Object.keys(INTERVALS) }));
+app.get("/api/config", (req, res) => res.json({ ai: aiEnabled(), fundamentals: fundamentalsEnabled(), mock: process.env.MOCK === "1", timeframes: Object.keys(INTERVALS) }));
+
+// Flux en direct (prédictions, actus) et prédictions IA.
+app.get("/api/stream", streamHandler);
+app.get("/api/predictions", (req, res) => res.json(predictionsSnapshot()));
+app.post("/api/predictions/run", (req, res) => {
+  // Relance manuelle réservée à l'administrateur (variable ADMIN_TOKEN).
+  if (!process.env.ADMIN_TOKEN || req.get("x-admin-token") !== process.env.ADMIN_TOKEN) return res.status(403).json({ error: "Accès refusé" });
+  runCycle(); res.json({ ok: true });
+});
+
+// Fiche entreprise.
+app.get("/api/fundamentals", wrap(async (req) => {
+  const { symbol } = req.query;
+  if (!SYMBOL.test(symbol || "")) throw bad("Symbole invalide");
+  return fundamentals(symbol);
+}));
 
 app.get("/api/chart", wrap(async (req) => {
   const { symbol, tf = "1d" } = req.query;
@@ -34,7 +53,7 @@ app.get("/api/live", wrap(async (req) => {
 }));
 
 app.get("/api/quotes", wrap(async (req) => {
-  const list = String(req.query.symbols || "").split(",").filter((s) => SYMBOL.test(s)).slice(0, 20);
+  const list = String(req.query.symbols || "").split(",").filter((s) => SYMBOL.test(s)).slice(0, 80);
   return quotes(list);
 }));
 
@@ -74,6 +93,20 @@ app.post("/api/analyse", async (req, res) => {
     res.status(e.status || 500).json({ error: e.message || "Erreur pendant l'analyse" });
   }
 });
+
+// Actus rafraîchies en tâche de fond : les navigateurs ouverts sont prévenus des nouveaux titres.
+let knownTitles = new Set();
+async function refreshNews() {
+  try {
+    const { items } = await allNews();
+    const fresh = items.filter((n) => !knownTitles.has(n.title));
+    if (knownTitles.size && fresh.length) broadcast("news", { count: fresh.length, latest: fresh.slice(0, 5) });
+    knownTitles = new Set(items.map((n) => n.title));
+  } catch (e) { console.error("Actus :", e.message); }
+}
+refreshNews();
+setInterval(refreshNews, 5 * 60 * 1000 + 5000);
+startPredictions();
 
 const port = Number(process.env.PORT || 3000);
 app.listen(port, () => console.log(`Salle des marchés : http://localhost:${port}${process.env.MOCK === "1" ? " (données fictives)" : ""}`));

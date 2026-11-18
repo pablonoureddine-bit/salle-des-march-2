@@ -1,26 +1,12 @@
 import * as TA from "./indicators.js";
 import { MODULES, LESSONS } from "./academy.js";
+import { $, store, fmt, pct, pctAbs, dir, ago, el, api, connectLive, onLive, toast } from "./util.js";
+import { WATCH, KNOWN, TICKER, assetClass } from "./universe.js";
+import * as Monde from "./monde.js";
+import * as Predictions from "./predictions.js";
+import * as Entreprise from "./entreprise.js";
 
-const $ = (id) => document.getElementById(id);
 const LW = window.LightweightCharts;
-const store = {
-  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
-};
-
-/* ───────── Actifs suivis ───────── */
-const WATCH = [
-  { group: "Indices", items: [
-    ["^FCHI", "CAC 40"], ["^STOXX50E", "Euro Stoxx 50"], ["^GDAXI", "DAX"], ["^FTSE", "FTSE 100"],
-    ["^GSPC", "S&P 500"], ["^IXIC", "Nasdaq Composite"], ["^NDX", "Nasdaq 100"], ["^DJI", "Dow Jones"], ["^N225", "Nikkei 225"]] },
-  { group: "Actions Paris", items: [["MC.PA", "LVMH"], ["TTE.PA", "TotalEnergies"], ["AIR.PA", "Airbus"], ["BNP.PA", "BNP Paribas"], ["OR.PA", "L'Oréal"]] },
-  { group: "Actions US", items: [["AAPL", "Apple"], ["NVDA", "Nvidia"], ["MSFT", "Microsoft"], ["TSLA", "Tesla"], ["AMZN", "Amazon"]] },
-  { group: "Crypto", items: [["BTC-USD", "Bitcoin"], ["ETH-USD", "Ethereum"], ["SOL-USD", "Solana"]] },
-  { group: "Forex", items: [["EURUSD=X", "EUR/USD"], ["GBPUSD=X", "GBP/USD"], ["USDJPY=X", "USD/JPY"]] },
-  { group: "Matières premières", items: [["GC=F", "Or"], ["SI=F", "Argent"], ["BZ=F", "Pétrole Brent"], ["CL=F", "Pétrole WTI"]] },
-];
-const KNOWN = new Map(WATCH.flatMap((g) => g.items));
-const TICKER = ["^FCHI", "^GDAXI", "^STOXX50E", "^GSPC", "^IXIC", "^DJI", "BTC-USD", "EURUSD=X", "GC=F", "BZ=F"];
 const TF_LABEL = { "15m": "15 minutes", "1h": "1 heure", "1d": "1 jour", "1wk": "1 semaine" };
 const LIVE_MS = 10000;
 
@@ -32,48 +18,30 @@ const state = {
   data: null, A: null, quotes: new Map(), assetNews: [], allNews: null, config: {},
 };
 
-/* ───────── Formats ───────── */
-const dec = (v) => { const a = Math.abs(v); return a >= 1000 ? 2 : a >= 10 ? 2 : a >= 1 ? 4 : 6; };
-const fmt = (v) => v == null || !isFinite(v) ? "—" : v.toLocaleString("fr-FR", { minimumFractionDigits: dec(v), maximumFractionDigits: dec(v) });
-const pct = (v) => v == null || !isFinite(v) ? "—" : (v > 0 ? "+" : "") + (v * 100).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " %";
-const pctAbs = (v) => (v * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 }) + " %";
-const dir = (v) => v > 0 ? "up" : v < 0 ? "down" : "flat";
-const ago = (iso) => {
-  if (!iso) return "";
-  const m = Math.round((Date.now() - new Date(iso)) / 60000);
-  if (m < 1) return "à l'instant"; if (m < 60) return `il y a ${m} min`;
-  const h = Math.round(m / 60); if (h < 24) return `il y a ${h} h`;
-  return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
-};
-function el(tag, attrs, ...kids) {
-  const e = document.createElement(tag);
-  for (const [k, v] of Object.entries(attrs || {})) {
-    if (v == null || v === false) continue;
-    if (k === "class") e.className = v; else if (k === "style") e.style.cssText = v;
-    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
-  }
-  for (const k of kids.flat()) if (k != null && k !== false) e.append(k instanceof Node ? k : String(k));
-  return e;
-}
-async function api(path, opts) {
-  const res = await fetch(path, opts);
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(body.error || `Erreur ${res.status}`);
-  return body;
-}
 const displayName = () => KNOWN.get(state.symbol) || state.name || state.symbol;
 
 /* ───────── Navigation ───────── */
+const VIEWS = ["marches", "monde", "predictions", "entreprise", "actus", "academie"];
 function route() {
   const [view, sub] = location.hash.replace("#", "").split("/");
-  const v = ["marches", "actus", "academie"].includes(view) ? view : "marches";
-  for (const id of ["marches", "actus", "academie"]) $("view-" + id).hidden = id !== v;
+  const v = VIEWS.includes(view) ? view : "marches";
+  for (const id of VIEWS) $("view-" + id).hidden = id !== v;
   document.querySelectorAll(".tabs a").forEach((a) => a.classList.toggle("on", a.dataset.view === v));
   if (v === "marches") requestAnimationFrame(() => charts.forEach((c) => c.timeScale().applyOptions({})));
+  Monde.setVisible(v === "monde");
+  if (v === "predictions") Predictions.show();
+  if (v === "entreprise") Entreprise.show(sub ? decodeURIComponent(sub) : state.symbol);
   if (v === "actus") renderNews();
   if (v === "academie") renderAcademy(sub);
   window.scrollTo({ top: 0 });
 }
+// Contexte partagé avec les autres vues.
+const ctx = {
+  open(symbol, name) { loadSymbol(symbol, name); location.hash = "marches"; },
+  company(symbol) { location.hash = "entreprise/" + encodeURIComponent(symbol); },
+  currentSymbol: () => state.symbol,
+  config: () => state.config,
+};
 window.addEventListener("hashchange", route);
 
 /* ───────── Bandeau et liste ───────── */
@@ -214,6 +182,7 @@ function renderQuote(prevPrice) {
   const ref = m.previousClose && state.tf !== "1wk" ? m.previousClose : A.prev;
   $("q-name").textContent = displayName();
   $("q-sym").textContent = state.symbol;
+  $("q-company").hidden = assetClass(state.symbol) !== "action";
   $("q-px").textContent = fmt(price);
   $("q-chg").textContent = `${pct(price / ref - 1)}  ${price - ref >= 0 ? "+" : ""}${fmt(price - ref)}`;
   $("q-chg").className = "chg mono " + dir(price - ref);
@@ -300,6 +269,7 @@ async function liveTick() {
   }
 }
 
+$("q-company").addEventListener("click", () => ctx.company(state.symbol));
 $("tf").addEventListener("click", (e) => {
   const tf = e.target.closest("button")?.dataset.tf; if (!tf) return;
   state.tf = tf; store.set("sdm.tf", tf);
@@ -489,6 +459,9 @@ $("overlays").querySelectorAll("button").forEach((b) => b.classList.toggle("on",
   $("go").disabled = !state.config.ai;
   if (!state.config.ai) $("ai-status").textContent = "Pour activer l'analyse, l'administrateur du site doit ajouter une clé API Anthropic (variable ANTHROPIC_API_KEY).";
   renderTicker(); renderWatch();
+  Monde.init(ctx); Predictions.init(ctx); Entreprise.init(ctx);
+  connectLive();
+  onLive("news", (d) => { toast(`${d.count} nouveau${d.count > 1 ? "x" : ""} titre${d.count > 1 ? "s" : ""} dans les actualités`); loadNews(); });
   route();
   loadSymbol(state.symbol);
   refreshQuotes(); setInterval(refreshQuotes, 20000);

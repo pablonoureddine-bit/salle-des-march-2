@@ -8,5 +8,13 @@ services:
     envVars:
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: FMP_API_KEY
+        sync: false
       - key: AI_LIMIT_PER_HOUR
         value: "10"
+      - key: PRED_INTERVAL_MIN
+        value: "60"
+      - key: PRED_EFFORT
+        value: low
+      - key: ADMIN_TOKEN
+        generateValue: true

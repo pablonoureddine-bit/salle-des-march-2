@@ -15,6 +15,9 @@
     <a class="logo" href="#marches"><span class="logo-mark" aria-hidden="true"></span>Salle des marchés</a>
     <nav class="tabs" aria-label="Sections">
       <a href="#marches" data-view="marches">Marchés</a>
+      <a href="#monde" data-view="monde">Monde</a>
+      <a href="#predictions" data-view="predictions">Prédictions IA</a>
+      <a href="#entreprise" data-view="entreprise">Entreprises</a>
       <a href="#actus" data-view="actus">Actualités</a>
       <a href="#academie" data-view="academie">Académie</a>
     </nav>
@@ -36,6 +39,7 @@
         <span class="live-dot" id="live-dot" title="Mise à jour en direct"></span>
         <h1 id="q-name">—</h1>
         <span class="q-sym mono" id="q-sym"></span>
+        <button class="small-btn" id="q-company" hidden>Fiche entreprise</button>
       </div>
       <div class="q-px">
         <span class="px mono" id="q-px">—</span>
@@ -116,6 +120,45 @@
       <div class="result" id="result" hidden></div>
       <p class="disclaimer">Outil d'aide à la décision, pas un conseil en investissement. Les scénarios sont des hypothèses fondées sur les seules données affichées. Ne risque jamais un capital que tu ne peux pas perdre.</p>
     </section>
+  </section>
+
+  <!-- ───────── MONDE ───────── -->
+  <section class="view" id="view-monde" hidden>
+    <div class="panel-head big">
+      <div><div class="eyebrow" id="monde-time">Chargement des cours…</div><h1>Marchés mondiaux</h1></div>
+      <div class="seg" id="monde-filter" role="group" aria-label="Filtrer">
+        <button data-f="all">Tout</button><button data-f="europe">Europe</button><button data-f="ameriques">Amériques</button><button data-f="asie">Asie</button><button data-f="taux">Taux</button><button data-f="devises">Devises</button><button data-f="matieres">Matières</button><button data-f="crypto">Crypto</button>
+      </div>
+    </div>
+    <div class="movers panel" id="monde-movers"></div>
+    <div class="monde-grid" id="monde-grid"></div>
+    <p class="muted small">Cours rafraîchis toutes les 20 secondes. Selon les places, ils peuvent avoir jusqu'à 15 minutes de retard. Clique sur une ligne pour ouvrir le graphique.</p>
+  </section>
+
+  <!-- ───────── PRÉDICTIONS ───────── -->
+  <section class="view" id="view-predictions" hidden>
+    <div class="panel-head big">
+      <div><div class="eyebrow"><span class="live-dot on"></span> <span id="pred-status">Chargement…</span></div><h1>Prédictions IA</h1></div>
+      <div class="seg" id="pred-filter" role="group" aria-label="Filtrer"></div>
+    </div>
+    <p class="muted" style="margin:0;max-width:80ch">Claude relit en continu les dernières actualités et les indicateurs techniques de chaque actif, puis met à jour sa prédiction à 1–5 séances. Chaque prédiction est jugée après 7 jours pour mesurer le taux de réussite réel.</p>
+    <div class="stats" id="pred-stats"></div>
+    <div class="pred-grid" id="pred-grid"></div>
+    <p class="disclaimer">Les prédictions sont générées automatiquement par une intelligence artificielle. Elles peuvent être fausses et ne constituent pas un conseil en investissement ni une recommandation d'achat ou de vente.</p>
+  </section>
+
+  <!-- ───────── ENTREPRISES ───────── -->
+  <section class="view" id="view-entreprise" hidden>
+    <div class="academy">
+      <nav class="panel lessons" aria-label="Sociétés">
+        <div class="search" style="margin:4px 4px 8px;max-width:none">
+          <input id="ent-search" type="search" placeholder="Chercher une société" autocomplete="off" aria-label="Chercher une société">
+          <div class="search-res" id="ent-res" hidden></div>
+        </div>
+        <div id="ent-list"></div>
+      </nav>
+      <div class="ent-body" id="ent-body"></div>
+    </div>
   </section>
 
   <!-- ───────── ACTUALITÉS ───────── -->
