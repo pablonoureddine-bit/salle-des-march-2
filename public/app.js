@@ -220,7 +220,7 @@ function renderQuote(prevPrice) {
     px.classList.add(price > prevPrice ? "flash-up" : "flash-down");
     setTimeout(() => px.classList.remove("flash-up", "flash-down"), 50);
   }
-  document.title = `${displayName()} ${fmt(price)} · Salle des marchés`;
+  document.title = `${displayName()} ${fmt(price)} · Invest Zoo`;
 }
 
 // Animations : petite gerbe à chaque mouvement du prix, grande à chaque palier de ±1 % sur la séance.
@@ -518,10 +518,17 @@ $("overlays").querySelectorAll("button").forEach((b) => b.classList.toggle("on",
 (async () => {
   try { state.config = await api("/api/config"); } catch { state.config = {}; }
   $("mock-banner").hidden = !state.config.mock;
-  $("ai-state").textContent = state.config.ai ? "IA active" : "IA non configurée";
-  $("ai-state").className = "badge " + (state.config.ai ? "ok" : "ko");
+  const KEY_TXT = {
+    valide: "Clé API valide", "refusée": "Clé API refusée", absente: "Clé API absente",
+    "sans accès au modèle": "Clé sans accès au modèle", "non vérifiée": "Clé non vérifiée",
+  };
+  const k = state.config.aiKey || (state.config.ai ? "valide" : "absente");
+  $("ai-state").textContent = KEY_TXT[k] || k;
+  $("ai-state").className = "badge " + (k === "valide" ? "ok" : "ko");
   $("go").disabled = !state.config.ai;
-  if (!state.config.ai) $("ai-status").textContent = "Pour activer l'analyse, l'administrateur du site doit ajouter une clé API Anthropic (variable ANTHROPIC_API_KEY).";
+  if (k === "refusée") $("ai-status").textContent = "La clé API Anthropic enregistrée dans Render est refusée. Vérifie qu'elle est complète (elle commence par sk-ant-) et qu'elle n'a pas été supprimée, puis recolle-la dans Render → Environment → ANTHROPIC_API_KEY.";
+  else if (k === "sans accès au modèle") $("ai-status").textContent = "La clé est reconnue mais n'a pas accès au modèle Claude utilisé. Vérifie ton compte sur console.anthropic.com (crédit, organisation).";
+  else if (k === "absente") $("ai-status").textContent = "Pour activer l'analyse par Claude, ajoute une clé API Anthropic dans Render (variable ANTHROPIC_API_KEY).";
   renderTicker();
   Notify.init({ open: (s) => ctx.open(s) });
   Browser.init(ctx); browserReady = true;

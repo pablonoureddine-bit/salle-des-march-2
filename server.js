@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chart, quotes, search, INTERVALS } from "./lib/market.js";
 import { allNews, assetNews } from "./lib/news.js";
-import { analyse, aiEnabled, Anthropic } from "./lib/ai.js";
+import { analyse, aiEnabled, checkKey, Anthropic } from "./lib/ai.js";
 import { streamHandler, broadcast } from "./lib/live.js";
 import { startPredictions, snapshot as predictionsSnapshot, runCycle } from "./lib/predictions.js";
 import { fundamentals, fundamentalsEnabled } from "./lib/fundamentals.js";
@@ -23,7 +23,10 @@ const wrap = (fn) => async (req, res) => {
 };
 const bad = (msg) => Object.assign(new Error(msg), { status: 400 });
 
-app.get("/api/config", (req, res) => res.json({ ai: aiEnabled(), fundamentals: fundamentalsEnabled(), mock: process.env.MOCK === "1", timeframes: Object.keys(INTERVALS) }));
+app.get("/api/config", async (req, res) => {
+  const aiKey = await Promise.race([checkKey(), new Promise((r) => setTimeout(() => r("non vérifiée"), 4000))]);
+  res.json({ ai: aiEnabled() && aiKey !== "refusée", aiKey, fundamentals: fundamentalsEnabled(), mock: process.env.MOCK === "1", timeframes: Object.keys(INTERVALS) });
+});
 
 // Flux en direct (prédictions, actus) et prédictions IA.
 app.get("/api/stream", streamHandler);
@@ -113,4 +116,4 @@ setInterval(refreshNews, 5 * 60 * 1000 + 5000);
 startPredictions();
 
 const port = Number(process.env.PORT || 3000);
-app.listen(port, () => console.log(`Salle des marchés : http://localhost:${port}${process.env.MOCK === "1" ? " (données fictives)" : ""}`));
+app.listen(port, () => console.log(`Invest Zoo : http://localhost:${port}${process.env.MOCK === "1" ? " (données fictives)" : ""}`));

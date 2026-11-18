@@ -119,8 +119,8 @@ function welcome() {
   store.set("sdm.welcomed", true);
   const modal = el("div", { class: "modal-bg", onclick: (e) => e.target === modal && modal.remove() });
   modal.append(el("div", { class: "modal welcome", role: "dialog", "aria-modal": "true", "aria-labelledby": "wl-title" },
-    el("div", { class: "eyebrow" }, "Bienvenue"),
-    el("h2", { id: "wl-title" }, "Ta salle des marchés"),
+    el("div", { class: "eyebrow" }, "Ta salle des marchés"),
+    el("h2", { id: "wl-title" }, "Bienvenue sur Invest Zoo"),
     el("ul", null,
       el("li", null, el("b", null, "Marchés : "), "choisis une famille (indices, actions, crypto…) puis un actif pour voir son graphique et son analyse."),
       el("li", null, el("b", null, "Prédictions : "), "les prévisions à 1–5 séances, mises à jour en continu, avec leur taux de réussite."),
