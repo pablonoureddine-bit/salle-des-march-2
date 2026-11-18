@@ -14,7 +14,8 @@ export const WORLD = [
   { id: "asie", title: "Asie-Pacifique", items: [
     ["^N225", "Nikkei 225", "Japon"], ["^HSI", "Hang Seng", "Hong Kong"], ["000001.SS", "Shanghai Composite", "Chine"],
     ["^KS11", "KOSPI", "Corée du Sud"], ["^TWII", "Taiex", "Taïwan"], ["^BSESN", "Sensex", "Inde"],
-    ["^NSEI", "Nifty 50", "Inde"], ["^AXJO", "S&P/ASX 200", "Australie"], ["^STI", "Straits Times", "Singapour"]] },
+    ["^NSEI", "Nifty 50", "Inde"], ["^AXJO", "S&P/ASX 200", "Australie"], ["^NZ50", "NZX 50", "Nouvelle-Zélande"],
+    ["^STI", "Straits Times", "Singapour"], ["^JKSE", "IDX Composite", "Indonésie"], ["^KLSE", "FTSE Bursa Malaysia KLCI", "Malaisie"], ["^SET.BK", "SET", "Thaïlande"]] },
   { id: "taux", title: "Taux d'intérêt US", items: [
     ["^IRX", "Taux 3 mois", "États-Unis"], ["^FVX", "Taux 5 ans", "États-Unis"], ["^TNX", "Taux 10 ans", "États-Unis"], ["^TYX", "Taux 30 ans", "États-Unis"]] },
   { id: "devises", title: "Devises", items: [

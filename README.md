@@ -9,6 +9,8 @@ Outil de support pour traders, en français :
 - **Anticipations par Claude** : trois scénarios chiffrés (haussier, central, baissier) à partir des indicateurs et des derniers titres de presse.
 - **Marchés** : onglets par famille de titres (indices du monde entier, actions, crypto, devises, matières premières, taux), cartes avec logo ou drapeau, cours et mini-courbe rafraîchis toutes les 20 secondes.
 - **Calendrier** : annonces économiques de la semaine et de la suivante (inflation, emploi, banques centrales…) et publications de résultats, avec rappel 15 minutes avant les annonces à fort impact.
+- **Trader** : acheter ou vendre en quelques clics (compte démo), graphique en direct avec bougies d'une minute, prix qui défile, stop loss et take profit avec la perte ou le gain en euros affichés avant de valider, volume calculé automatiquement.
+- **Bourses ouvertes maintenant** : horaires en direct de 13 places (Océanie, Asie, Europe, Amériques) ; badge « Marché ouvert / fermé » sur chaque actif.
 - **Compte démo** : 10 000 € fictifs pour acheter et vendre aux cours du moment, valeur du compte et gains ou pertes en direct, conversion automatique en euros.
 - **Mon suivi** : mur des actifs favoris (★) avec courbe en direct, rafraîchi toutes les 5 secondes.
 - **État du site** : la page `/statut.html` teste chaque source de données et la clé Claude.

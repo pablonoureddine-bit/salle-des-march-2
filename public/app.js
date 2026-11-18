@@ -1,6 +1,6 @@
 import * as TA from "./indicators.js";
 import { MODULES, LESSONS } from "./academy.js";
-import { $, store, fmt, pct, pctAbs, dir, ago, el, api, connectLive, onLive } from "./util.js";
+import { $, store, fmt, pct, pctAbs, dir, ago, el, api, connectLive, onLive, tween } from "./util.js";
 import { KNOWN, TICKER, assetClass } from "./universe.js";
 import * as Browser from "./browser.js";
 import * as Calendar from "./calendar.js";
@@ -11,12 +11,14 @@ import { assetVisual, topicOf, topicVisual, TOPICS } from "./visuals.js";
 import * as Quiz from "./quiz.js";
 import * as RT from "./realtime.js";
 import * as Demo from "./demo.js";
+import * as Trader from "./trader.js";
+import * as Sessions from "./sessions.js";
 import { lexiqueBlock } from "./lexique.js";
 import * as Predictions from "./predictions.js";
 import * as Entreprise from "./entreprise.js";
 
 const LW = window.LightweightCharts;
-const TF_LABEL = { "15m": "15 minutes", "1h": "1 heure", "1d": "1 jour", "1wk": "1 semaine" };
+const TF_LABEL = { "1m": "1 minute (direct)", "15m": "15 minutes", "1h": "1 heure", "1d": "1 jour", "1wk": "1 semaine" };
 const LIVE_MS = 5000;
 let stopRealtime = null, realtimeOn = false;
 
@@ -32,7 +34,7 @@ const displayName = () => KNOWN.get(state.symbol) || state.name || state.symbol;
 
 /* ───────── Navigation ───────── */
 // Rubriques principales ; "infos" regroupe actualités, calendrier et prédictions.
-const SECTIONS = ["marches", "actus", "calendrier", "predictions", "entreprise", "compte", "journal", "academie"];
+const SECTIONS = ["marches", "trader", "actus", "calendrier", "predictions", "entreprise", "compte", "journal", "academie"];
 const INFOS = ["actus", "calendrier", "predictions"];
 const COMPTE = { demo: "compte", journal: "journal" };
 const scrollMemo = {};
@@ -43,7 +45,7 @@ function resolve() {
   if (view === "infos") { if (!INFOS.includes(sub)) sub = store.get("sdm.infos", "actus"); store.set("sdm.infos", sub); return { nav: "infos", section: sub, sub }; }
   if (view === "journal") { view = "compte"; sub = "journal"; }
   if (view === "compte") { if (!COMPTE[sub]) sub = store.get("sdm.compte", "demo"); store.set("sdm.compte", sub); return { nav: "compte", section: COMPTE[sub], sub }; }
-  if (!["marches", "entreprise", "academie"].includes(view)) view = "marches";
+  if (!["marches", "trader", "entreprise", "academie"].includes(view)) view = "marches";
   return { nav: view, section: view, sub };
 }
 function route() {
@@ -61,6 +63,8 @@ function route() {
     if (section === "calendrier") Calendar.show();
     if (section === "journal") Journal.show();
     if (section === "compte") Demo.show();
+    if (section === "trader") Trader.show(pendingTrade?.[0], pendingTrade?.[1]); else Trader.hide();
+    pendingTrade = null;
     if (section === "predictions") Predictions.show();
     if (section === "entreprise") Entreprise.show(sub ? decodeURIComponent(sub) : state.symbol);
     if (section === "actus") renderNews();
@@ -79,12 +83,13 @@ const ctx = {
   company(symbol) { location.hash = "entreprise/" + encodeURIComponent(symbol); },
   // Depuis les cartes de la page Marchés : on reste sur la page et on remonte jusqu'au graphique.
   select(symbol, name) { loadSymbol(symbol, name); $("quote-box").scrollIntoView({ behavior: "smooth", block: "start" }); },
+  trade(symbol, name) { pendingTrade = [symbol, name]; if (location.hash === "#trader") route(); else location.hash = "trader"; },
   currentSymbol: () => state.symbol,
   currentPrice: () => state.A?.last,
   config: () => state.config,
   onQuotes(map) { for (const [s, q] of map) Notify.checkAlerts(s, q.price); },
 };
-let browserReady = false;
+let browserReady = false, pendingTrade = null;
 window.addEventListener("hashchange", route);
 
 /* ───────── Bandeau et liste ───────── */
@@ -134,7 +139,7 @@ function chartOpts(el, priceFmt) {
     layout: { background: { type: "solid", color: "transparent" }, textColor: tok("--muted"), fontFamily: "JetBrains Mono, monospace", fontSize: 11 },
     grid: { vertLines: { color: tok("--soft") }, horzLines: { color: tok("--soft") } },
     rightPriceScale: { borderColor: tok("--line"), minimumWidth: 78 },
-    timeScale: { borderColor: tok("--line"), timeVisible: state.tf === "15m" || state.tf === "1h", rightOffset: 4 },
+    timeScale: { borderColor: tok("--line"), timeVisible: state.tf === "1m" || state.tf === "15m" || state.tf === "1h", rightOffset: 4 },
     crosshair: { mode: 0 },
     localization: { locale: "fr-FR", priceFormatter: priceFmt || fmt },
   };
@@ -219,7 +224,9 @@ function renderQuote(prevPrice) {
   $("q-sym").textContent = state.symbol;
   favLabel();
   $("q-company").hidden = assetClass(state.symbol) !== "action";
-  $("q-px").textContent = fmt(price);
+  tween($("q-px"), price, fmt);
+  const mk = $("q-market");
+  if (state.data.meta.isOpen != null) { mk.hidden = false; mk.className = "mkt " + (state.data.meta.isOpen ? "open" : "closed"); mk.replaceChildren(el("i"), state.data.meta.isOpen ? "Ouvert" : "Fermé"); mk.title = state.data.meta.session || ""; } else mk.hidden = true;
   $("q-chg").textContent = `${pct(price / ref - 1)}  ${price - ref >= 0 ? "+" : ""}${fmt(price - ref)}`;
   $("q-chg").className = "chip big " + dir(price - ref);
   celebrate(price, prevPrice, price / ref - 1);
@@ -270,7 +277,7 @@ function renderPanels() {
 /* ───────── Chargement et direct ───────── */
 let liveTimer = null, loadSeq = 0;
 async function loadSymbol(symbol, name) {
-  lastStep = null;
+  lastStep = null; $("q-px").dataset.v = "";
   state.symbol = symbol; state.name = name || KNOWN.get(symbol) || "";
   store.set("sdm.symbol", symbol);
   renderWatch();
@@ -320,6 +327,7 @@ async function liveTick() {
     const live = await api(`/api/live?symbol=${encodeURIComponent(state.symbol)}&tf=${state.tf}`);
     if (seq !== loadSeq || !live.bars.length) return;
     if (live.meta?.previousClose) state.data.meta.previousClose = live.meta.previousClose;
+    if (live.meta?.isOpen != null) Object.assign(state.data.meta, { isOpen: live.meta.isOpen, session: live.meta.session });
     applyBars(live.bars);
   } catch {
     $("live-dot").classList.remove("on");
@@ -351,7 +359,7 @@ $("q-alert").addEventListener("click", () => state.A && Notify.alertForm({ symbo
 $("q-trade").addEventListener("click", () => { location.hash = "compte/journal"; });
 const favLabel = () => { $("q-fav").textContent = Browser.isFav(state.symbol) ? "★ Suivi" : "☆ Suivre"; };
 $("q-fav").addEventListener("click", () => { const on = Browser.toggleFav(state.symbol); favLabel(); Notify.notify({ title: on ? `${displayName()} ajouté à ton suivi` : `${displayName()} retiré de ton suivi`, kind: "info", popup: true }); });
-$("q-buy").addEventListener("click", () => state.A && Demo.buyForm({ symbol: state.symbol, name: displayName(), price: state.A.last, currency: state.data?.meta?.currency || "EUR" }));
+$("q-buy").addEventListener("click", () => ctx.trade(state.symbol, displayName()));
 
 async function renderMiniCal() {
   const evs = await Calendar.upcoming(4);
@@ -571,7 +579,7 @@ $("overlays").querySelectorAll("button").forEach((b) => b.classList.toggle("on",
   renderTicker();
   Notify.init({ open: (s) => ctx.open(s) });
   Browser.init(ctx); browserReady = true;
-  Predictions.init(ctx); Entreprise.init(ctx); Calendar.init(ctx); Journal.init(ctx); Demo.init(ctx);
+  Predictions.init(ctx); Entreprise.init(ctx); Calendar.init(ctx); Journal.init(ctx); Demo.init(ctx); Trader.init(ctx); Sessions.init(ctx);
   connectLive();
   onLive("news", (d) => {
     Notify.notify({ title: `${d.count} nouveau${d.count > 1 ? "x" : ""} titre${d.count > 1 ? "s" : ""} dans les actualités`, body: d.latest?.[0]?.title || "", kind: "news", browser: true });

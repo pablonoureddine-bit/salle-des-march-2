@@ -17,7 +17,7 @@ const COUNTRY = {
   "^FCHI": "fr", "^SBF120": "fr", "^GDAXI": "de", "^FTSE": "gb", "^STOXX50E": "eu", "^STOXX": "eu", "^IBEX": "es", "FTSEMIB.MI": "it",
   "^AEX": "nl", "^SSMI": "ch", "^BFX": "be", "^OMX": "se", "^GSPC": "us", "^DJI": "us", "^IXIC": "us", "^NDX": "us", "^RUT": "us",
   "^VIX": "us", "^GSPTSE": "ca", "^BVSP": "br", "^MXX": "mx", "^N225": "jp", "^HSI": "hk", "000001.SS": "cn", "^KS11": "kr",
-  "^TWII": "tw", "^BSESN": "in", "^NSEI": "in", "^AXJO": "au", "^STI": "sg", "^IRX": "us", "^FVX": "us", "^TNX": "us", "^TYX": "us",
+  "^TWII": "tw", "^BSESN": "in", "^NSEI": "in", "^AXJO": "au", "^NZ50": "nz", "^STI": "sg", "^JKSE": "id", "^KLSE": "my", "^SET.BK": "th", "^IRX": "us", "^FVX": "us", "^TNX": "us", "^TYX": "us",
 };
 const CCY = { EUR: "eu", USD: "us", GBP: "gb", JPY: "jp", CHF: "ch", AUD: "au", CAD: "ca", CNY: "cn" };
 

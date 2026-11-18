@@ -37,7 +37,9 @@ export async function show(symbol) {
     if (my !== seq) return;
     box.replaceChildren(el("div", { class: "empty" },
       el("h2", null, KNOWN.get(symbol) || symbol),
-      el("p", null, e.status === 503 ? e.message : "Fiche indisponible : " + e.message),
+      el("p", null, e.status === 503 ? e.message : "Les données financières de cette société n'ont pas pu être chargées."),
+      el("p", { class: "muted small" }, "Détail : " + e.message + ". Tu peux vérifier l'état des sources sur la page « État du site »."),
+      el("a", { class: "btn", href: "/statut.html", target: "_blank" }, "Voir l'état du site"),
       el("button", { class: "primary", onclick: () => ctx.open(symbol) }, "Voir le graphique")));
   }
 }

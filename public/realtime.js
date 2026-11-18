@@ -2,7 +2,7 @@
 // Mises à jour du graphique en continu. Si Binance n'est pas joignable (réseau, pays), on revient au mode normal.
 
 const MAP = { "BTC-USD": "BTCUSDT", "ETH-USD": "ETHUSDT", "SOL-USD": "SOLUSDT", "XRP-USD": "XRPUSDT", "BNB-USD": "BNBUSDT" };
-const TF = { "15m": "15m", "1h": "1h", "1d": "1d", "1wk": "1w" };
+const TF = { "1m": "1m", "15m": "15m", "1h": "1h", "1d": "1d", "1wk": "1w" };
 export const hasRealtime = (symbol) => Boolean(MAP[symbol]);
 
 export async function history(symbol, tf) {

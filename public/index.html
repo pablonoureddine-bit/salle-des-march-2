@@ -18,6 +18,7 @@
     <a class="logo" href="#marches" aria-label="Invest Zoo, accueil"><img class="logo-mark" src="logo.svg" alt="" width="34" height="34"><span>Invest <b>Zoo</b></span></a>
     <nav class="tabs" aria-label="Sections">
       <a href="#marches" data-view="marches"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 17l5-5 4 3 8-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 7h5v5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Marchés</span></a>
+      <a href="#trader" data-view="trader"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M7 4v16M7 8H4v7h6V8zM17 4v16M14 6h6v8h-6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Trader</span></a>
       <a href="#infos" data-view="infos"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Infos</span></a>
       <a href="#entreprise" data-view="entreprise"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 20V8l6-4v16M10 20V10h10v10M3 20h18M13 13h4M13 16h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg><span>Entreprises</span></a>
       <a href="#compte" data-view="compte"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M15 12h5M4 9h16" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="12" r="1.2" fill="currentColor"/></svg><span>Compte</span></a>
@@ -65,8 +66,57 @@
     <p class="disclaimer">Compte d'entraînement avec de l'argent fictif. Les résultats obtenus ici ne garantissent en rien ceux que tu obtiendrais avec de l'argent réel : frais, délais d'exécution et émotions changent beaucoup de choses. Investir comporte un risque de perte en capital.</p>
   </section>
 
+  <!-- ───────── TRADER ───────── -->
+  <section class="view" id="view-trader" hidden>
+    <div class="tr-top">
+      <div class="search inline tr-search">
+        <input id="tr-search" type="search" placeholder="Chercher un actif à trader (Apple, Bitcoin, CAC 40…)" autocomplete="off" aria-label="Chercher un actif à trader">
+        <div class="search-res" id="tr-res" hidden></div>
+      </div>
+      <div class="tr-account" id="tr-account"></div>
+    </div>
+    <div class="tr-chips" id="tr-popular"></div>
+    <div class="tr-layout">
+      <section class="panel tr-chart-panel">
+        <div class="tr-head">
+          <span id="tr-visual"></span>
+          <div><h1 id="tr-name">—</h1><span class="muted mono small" id="tr-sym"></span></div>
+          <div class="tr-px"><span class="mono" id="tr-price">—</span><span class="chip big" id="tr-chg"></span></div>
+        </div>
+        <div class="tr-status"><span class="mkt" id="tr-market"></span><span class="muted small" id="tr-session"></span><span class="live-dot" id="tr-live"></span><span class="muted small" id="tr-time"></span></div>
+        <p class="tr-closed" id="tr-closed" hidden>Ce marché est fermé : le prix ne bougera qu'à la prochaine ouverture. Les cryptos, elles, s'échangent 24h/24.</p>
+        <div class="seg" id="tr-tf" role="group" aria-label="Unité de temps"></div>
+        <div id="tr-chart" class="tr-chart"></div>
+        <p class="status err" id="tr-err" hidden></p>
+        <div class="tr-pos-head"><h2>Mes positions sur cet actif</h2><a class="small" href="#compte/demo">Tout mon compte</a></div>
+        <div class="dp-list" id="tr-positions"></div>
+      </section>
+      <aside class="panel ticket">
+        <div class="seg ticket-side" id="tr-side" role="group" aria-label="Sens de l'ordre">
+          <button type="button" data-side="achat" class="on">Acheter</button><button type="button" data-side="vente">Vendre</button>
+        </div>
+        <p class="muted small" id="tr-side-help"></p>
+        <label class="tk-label" for="tr-amount">Montant (€) <span class="muted" id="tr-cash"></span></label>
+        <input id="tr-amount" class="tk-amount" type="number" min="1" step="any" inputmode="decimal">
+        <div class="tk-quick" id="tr-quick"><button type="button" data-v="100">100 €</button><button type="button" data-v="500">500 €</button><button type="button" data-v="1000">1 000 €</button><button type="button" data-v="max">Tout</button></div>
+        <p class="tk-volume mono" id="tr-volume"></p>
+        <label class="tk-label" for="tr-sl">Stop loss <span class="muted">(limite ta perte)</span></label>
+        <input id="tr-sl" type="number" step="any" placeholder="prix de sortie si ça va mal">
+        <div class="tk-quick" id="tr-sl-quick"></div>
+        <label class="tk-label" for="tr-tp">Take profit <span class="muted">(encaisse ton gain)</span></label>
+        <input id="tr-tp" type="number" step="any" placeholder="prix de sortie si ça va bien">
+        <div class="tk-quick" id="tr-tp-quick"></div>
+        <div class="tr-summary" id="tr-summary"></div>
+        <button class="tr-go buy" id="tr-go" type="button">Acheter</button>
+        <p class="status err" id="tr-msg" role="status"></p>
+        <p class="muted small" style="margin:0">Compte démo : argent fictif, vrais cours. <a href="#academie/risque">Comment choisir son stop ?</a></p>
+      </aside>
+    </div>
+  </section>
+
   <!-- ───────── MARCHÉS ───────── -->
   <section class="view" id="view-marches">
+    <div class="sessions" id="sessions" aria-label="Bourses ouvertes maintenant"></div>
     <div class="families" id="families" role="tablist" aria-label="Familles de titres"></div>
     <div class="movers" id="movers"></div>
     <div class="cards" id="cards"></div>
@@ -79,13 +129,14 @@
           <span class="q-sym mono" id="q-sym"></span>
         </div>
         <span class="live-dot" id="live-dot" title="Mise à jour en direct"></span>
+        <span class="mkt" id="q-market" hidden></span>
       </div>
       <div class="q-px">
         <span class="px mono" id="q-px">—</span>
         <span class="chip big" id="q-chg"></span>
       </div>
       <div class="q-actions">
-        <button class="primary" id="q-buy">Acheter (démo)</button>
+        <button class="primary" id="q-buy">Acheter / Vendre</button>
         <button class="btn-soft" id="q-fav">☆ Suivre</button>
         <button class="btn-soft" id="q-alert">🔔 Créer une alerte</button>
         <button class="btn-soft" id="q-trade">Noter un trade</button>
@@ -98,7 +149,7 @@
       <section class="panel chart-panel">
         <div class="toolbar">
           <div class="seg" id="tf" role="group" aria-label="Unité de temps">
-            <button data-tf="15m">15 min</button><button data-tf="1h">1 h</button><button data-tf="1d" class="on">1 jour</button><button data-tf="1wk">1 sem.</button>
+            <button data-tf="1m">Direct</button><button data-tf="15m">15 min</button><button data-tf="1h">1 h</button><button data-tf="1d" class="on">1 jour</button><button data-tf="1wk">1 sem.</button>
           </div>
           <div class="seg" id="overlays" role="group" aria-label="Calques">
             <button data-ov="mm" class="on">Moyennes</button><button data-ov="bollinger">Bollinger</button><button data-ov="ichimoku">Ichimoku</button><button data-ov="fibonacci">Fibonacci</button><button data-ov="levels" class="on">Niveaux</button>

@@ -86,3 +86,21 @@ export function toast(msg) {
   t.textContent = msg; t.classList.add("on");
   clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("on"), 4000);
 }
+
+// Chiffre qui défile vers sa nouvelle valeur (et clignote en vert ou en rouge), comme sur une plateforme de trading.
+export function tween(node, to, format, ms = 450) {
+  if (!node || to == null || !isFinite(to)) return;
+  const from = parseFloat(node.dataset.v);
+  node.dataset.v = to;
+  if (!isFinite(from) || from === to || matchMedia("(prefers-reduced-motion: reduce)").matches) { node.textContent = format(to); return; }
+  node.classList.remove("tick-up-txt", "tick-down-txt"); void node.offsetWidth;
+  node.classList.add(to > from ? "tick-up-txt" : "tick-down-txt");
+  const t0 = performance.now();
+  const step = (t) => {
+    const k = Math.min(1, (t - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+    node.textContent = format(from + (to - from) * e);
+    if (k < 1 && node.dataset.v == to) requestAnimationFrame(step);
+    else if (node.dataset.v == to) node.textContent = format(to);
+  };
+  requestAnimationFrame(step);
+}
