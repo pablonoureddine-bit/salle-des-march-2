@@ -2,6 +2,7 @@
 import { $, el, api, fmt, pct, dir, spark, store } from "./util.js";
 import { WORLD, STOCKS } from "./universe.js";
 import { assetVisual } from "./visuals.js";
+import { subscribeTickers } from "./realtime.js";
 
 const byId = (id) => WORLD.find((g) => g.id === id).items;
 export const FAMILIES = [
@@ -20,7 +21,17 @@ export function init(c) {
   ctx = c;
   $("families").replaceChildren(...FAMILIES.map((f) => el("button", { role: "tab", "data-f": f.id, onclick: () => { fam = f.id; store.set("sdm.family", fam); render(); refresh(); } }, f.label)));
   render(); refresh();
-  timer = setInterval(() => !document.hidden && !$("view-marches").hidden && refresh(), 20000);
+  timer = setInterval(() => !document.hidden && !$("view-marches").hidden && refresh(), 10000);
+  // Cryptos : cours en temps réel sur les cartes (rendu au plus une fois par seconde).
+  if (!ctx.config().mock) {
+    let dirty = false;
+    subscribeTickers(FAMILIES.find((f) => f.id === "crypto").items.map((x) => x[0]), (t) => {
+      const prev = quotes.get(t.symbol);
+      quotes.set(t.symbol, { ...(prev || {}), symbol: t.symbol, price: t.price, previousClose: prev?.previousClose ?? t.open24h, spark: prev?.spark || [], moved: prev?.price != null && t.price !== prev.price ? (t.price > prev.price ? "up" : "down") : null });
+      dirty = true;
+    });
+    setInterval(() => { if (dirty && fam === "crypto" && !$("view-marches").hidden) { dirty = false; render(); } }, 1000);
+  }
 }
 
 export function familyOf(symbol) { return FAMILIES.find((f) => f.items.some(([s]) => s === symbol))?.id; }

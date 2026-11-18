@@ -9,13 +9,15 @@ import * as Notify from "./notify.js";
 import { burst } from "./fx.js";
 import { assetVisual, topicOf, topicVisual, TOPICS } from "./visuals.js";
 import * as Quiz from "./quiz.js";
+import * as RT from "./realtime.js";
 import { lexiqueBlock } from "./lexique.js";
 import * as Predictions from "./predictions.js";
 import * as Entreprise from "./entreprise.js";
 
 const LW = window.LightweightCharts;
 const TF_LABEL = { "15m": "15 minutes", "1h": "1 heure", "1d": "1 jour", "1wk": "1 semaine" };
-const LIVE_MS = 10000;
+const LIVE_MS = 5000;
+let stopRealtime = null, realtimeOn = false;
 
 const state = {
   symbol: store.get("sdm.symbol", "^FCHI"),
@@ -204,6 +206,7 @@ function renderQuote(prevPrice) {
   const m = state.data.meta, A = state.A;
   const price = A.last;
   const ref = m.previousClose && state.tf !== "1wk" ? m.previousClose : A.prev;
+  $("live-dot").title = realtimeOn ? "Temps réel" : "Mise à jour toutes les 5 secondes";
   $("q-name").textContent = displayName();
   if ($("q-visual").dataset.s !== state.symbol) { $("q-visual").replaceChildren(assetVisual(state.symbol, displayName(), 48)); $("q-visual").dataset.s = state.symbol; }
   $("q-sym").textContent = state.symbol;
@@ -214,7 +217,7 @@ function renderQuote(prevPrice) {
   celebrate(price, prevPrice, price / ref - 1);
   Notify.checkAlerts(state.symbol, price, $("q-px"));
   const t = A.b.at(-1).time;
-  $("q-meta").textContent = [m.exchange, m.currency, "bougies " + TF_LABEL[state.tf], "maj " + new Date().toLocaleTimeString("fr-FR"), "dernière bougie " + new Date(t * 1000).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: state.tf === "1d" || state.tf === "1wk" ? undefined : "short" })].filter(Boolean).join(" · ");
+  $("q-meta").textContent = [m.exchange, m.currency, "bougies " + TF_LABEL[state.tf], (realtimeOn ? "⚡ temps réel · " : "") + "maj " + new Date().toLocaleTimeString("fr-FR"), "dernière bougie " + new Date(t * 1000).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: state.tf === "1d" || state.tf === "1wk" ? undefined : "short" })].filter(Boolean).join(" · ");
   if (prevPrice != null && prevPrice !== price) {
     const px = $("q-px"); px.classList.remove("flash-up", "flash-down"); void px.offsetWidth;
     px.classList.add(price > prevPrice ? "flash-up" : "flash-down");
@@ -266,8 +269,16 @@ async function loadSymbol(symbol, name) {
   const seq = ++loadSeq;
   $("chart-err").hidden = true; $("live-dot").classList.remove("on");
   $("result").hidden = true; $("ai-status").textContent = "";
+  stopRealtime?.(); stopRealtime = null; realtimeOn = false;
+  const useRT = RT.hasRealtime(symbol) && !state.config.mock;
   try {
-    const data = await api(`/api/chart?symbol=${encodeURIComponent(symbol)}&tf=${state.tf}`);
+    let data;
+    if (useRT) {
+      // Cryptos : historique et flux en temps réel depuis Binance, sinon retour au mode normal.
+      try { data = { meta: { symbol, name: state.name, currency: "USD", exchange: "Binance (temps réel)" }, bars: await RT.history(symbol, state.tf) }; }
+      catch { data = null; }
+    }
+    data ||= await api(`/api/chart?symbol=${encodeURIComponent(symbol)}&tf=${state.tf}`);
     if (seq !== loadSeq) return;
     if (data.bars.length < 30) throw new Error("Pas assez d'historique pour cet actif sur cette unité de temps.");
     state.data = data;
@@ -277,6 +288,15 @@ async function loadSymbol(symbol, name) {
     $("live-dot").classList.add("on");
     loadAssetNews();
     refreshLesson();
+    if (useRT && data.meta.exchange.startsWith("Binance")) {
+      let pending = null, raf = 0;
+      stopRealtime = RT.subscribeCandles(symbol, state.tf, (bar) => {
+        if (seq !== loadSeq) return;
+        pending = bar;
+        // Au plus une mise à jour de l'écran par seconde, pour rester fluide.
+        if (!raf) raf = setTimeout(() => { raf = 0; applyBars([pending]); }, 1000);
+      }, (on) => { realtimeOn = on; $("live-dot").classList.toggle("on", on); $("live-dot").title = on ? "Temps réel" : "Reconnexion…"; });
+    }
   } catch (e) {
     if (seq !== loadSeq) return;
     $("chart-err").hidden = false; $("chart-err").textContent = "Impossible de charger " + symbol + " : " + e.message;
@@ -286,27 +306,35 @@ async function loadSymbol(symbol, name) {
 }
 
 async function liveTick() {
-  if (document.hidden || !state.data) return;
+  if (document.hidden || !state.data || realtimeOn) return;
   const seq = loadSeq;
   try {
     const live = await api(`/api/live?symbol=${encodeURIComponent(state.symbol)}&tf=${state.tf}`);
     if (seq !== loadSeq || !live.bars.length) return;
+    if (live.meta?.previousClose) state.data.meta.previousClose = live.meta.previousClose;
+    applyBars(live.bars);
+  } catch {
+    $("live-dot").classList.remove("on");
+  }
+}
+
+// Intègre de nouvelles bougies (mise à jour de la dernière ou ajout) et rafraîchit tout l'écran.
+function applyBars(newBars) {
+  if (!state.data || !newBars.length) return;
+  {
     const bars = state.data.bars;
     const prevPrice = state.A.last;
-    for (const nb of live.bars) {
+    for (const nb of newBars) {
       const last = bars.at(-1);
       if (nb.time === last.time) bars[bars.length - 1] = nb;
       else if (nb.time > last.time) bars.push(nb);
     }
-    if (live.meta?.previousClose) state.data.meta.previousClose = live.meta.previousClose;
     state.A = TA.analyse(bars, state.tf);
-    const appended = live.bars.filter((nb) => nb.time > S.lastTime).length > 1;
+    const appended = newBars.filter((nb) => nb.time > S.lastTime).length > 1;
     if (appended) S.candles.setData(bars.map(({ time, open, high, low, close }) => ({ time, open, high, low, close })));
     paintSeries(false);
     renderQuote(prevPrice); renderPanels(); refreshLesson(true);
     $("live-dot").classList.add("on");
-  } catch {
-    $("live-dot").classList.remove("on");
   }
 }
 
@@ -541,6 +569,6 @@ $("overlays").querySelectorAll("button").forEach((b) => b.classList.toggle("on",
   renderMiniCal(); setInterval(renderMiniCal, 10 * 60 * 1000);
   route();
   loadSymbol(state.symbol);
-  refreshQuotes(); setInterval(refreshQuotes, 20000);
+  refreshQuotes(); setInterval(refreshQuotes, 10000);
   loadNews(); setInterval(loadNews, 5 * 60 * 1000);
 })();
